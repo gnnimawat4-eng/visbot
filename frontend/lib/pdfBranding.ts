@@ -130,10 +130,9 @@ export async function addBrandedSignatureBlock(
   doc.text('Authorized by:', margin, y)
   y += 4
 
-  const sigW = 45
-  const sigH = 22
-  const gap  = 8
-  const stpR = 14
+  const sigW = 55
+  const sigH = 26
+  const gap  = 10
 
   // Signature box
   doc.setDrawColor(200, 200, 200)
@@ -144,15 +143,14 @@ export async function addBrandedSignatureBlock(
     if (img) doc.addImage(img.data, img.format, margin + 2, y + 2, sigW - 4, sigH - 4)
   }
 
-  // Stamp circle
-  const stpX = margin + sigW + gap + stpR
-  const stpY = y + stpR
+  // Stamp box (rectangle, same size as signature)
+  const stpX = margin + sigW + gap
   doc.setDrawColor(200, 200, 200)
   doc.setFillColor(252, 252, 252)
-  doc.circle(stpX, stpY, stpR, 'FD')
+  doc.rect(stpX, y, sigW, sigH, 'FD')
   if (b.stamp_url) {
     const img = await urlToImgData(b.stamp_url)
-    if (img) doc.addImage(img.data, img.format, stpX - stpR + 2, stpY - stpR + 2, stpR * 2 - 4, stpR * 2 - 4)
+    if (img) doc.addImage(img.data, img.format, stpX + 2, y + 2, sigW - 4, sigH - 4)
   }
 
   y += sigH + 3
