@@ -2,14 +2,12 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import {
-  ArrowLeft, ArrowDownCircle, ArrowUpCircle,
-  CheckCircle, Download, Printer, Loader2,
-} from 'lucide-react'
-import { format } from 'date-fns'
+import { ArrowLeft, CheckCircle, Download, Printer, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import type { GatePassPdfData } from '@/lib/gatePdf'
 import { useCompanyBranding } from '@/hooks/useCompanyBranding'
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface GatePass {
   id: string
@@ -39,67 +37,72 @@ interface GatePass {
   company: { name: string; logo_url: string | null } | null
 }
 
-const STATUS_PILL: Record<string, string> = {
-  inside:    'bg-green-50 text-green-700 border-green-200',
-  exited:    'bg-gray-100 text-gray-600 border-gray-200',
-  cancelled: 'bg-red-50 text-red-600 border-red-200',
-}
+// ─── Print CSS ────────────────────────────────────────────────────────────────
 
 const PRINT_CSS = `
-  @page { size: A4 portrait; margin: 20mm; }
+  @page { size: A4 portrait; margin: 15mm; }
+
   @media print {
-    body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .no-print  { display: none !important; }
-    .scr-only  { display: none !important; }
-    .prn-only  { display: block !important; }
-    .prn-avoid { page-break-inside: avoid; }
-    .prn-wm {
-      display: block;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(-30deg);
-      font-size: 100px;
-      font-weight: 900;
-      color: #000;
-      opacity: 0.05;
-      white-space: nowrap;
-      z-index: 0;
-      pointer-events: none;
-      text-transform: uppercase;
-      font-family: Arial, Helvetica, sans-serif;
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { margin: 0; }
+    .no-print { display: none !important; }
+    .watermark {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
     }
   }
-  .prn-only { display: none; }
-  .prn-wm   { display: none; }
+
+  .gp-wrapper { position: relative; overflow: hidden; }
+
+  .watermark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    font-size: 90px;
+    font-weight: 900;
+    color: #000;
+    opacity: 0.04;
+    white-space: nowrap;
+    z-index: 0;
+    pointer-events: none;
+    text-transform: uppercase;
+    font-family: Arial, Helvetica, sans-serif;
+    user-select: none;
+  }
+
+  .gp-table { border-collapse: collapse; width: 100%; }
+  .gp-table th, .gp-table td { border: 1px solid #000; padding: 8px; }
+  .gp-table thead tr { background: #000 !important; color: #fff !important; }
 `
 
-function Row({ label, value }: { label: string; value?: string | null }) {
-  if (!value) return null
+// ─── Helper components ────────────────────────────────────────────────────────
+
+function LabelVal({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div className="flex gap-3 py-2 border-b border-gray-50 last:border-0 text-sm">
-      <span className="w-36 flex-shrink-0 text-gray-400">{label}</span>
-      <span className="text-gray-900 font-medium">{value}</span>
+    <div className="flex flex-col gap-0.5 text-sm">
+      <span className="font-semibold text-gray-700 text-xs">{label}</span>
+      <span
+        className="border-b border-dotted border-gray-400 pb-0.5 min-h-[20px]"
+        style={{ minWidth: '120px' }}
+      >
+        {value || ''}
+      </span>
     </div>
   )
 }
 
-function Section({ title, accent, children }: { title: string; accent: string; children: React.ReactNode }) {
-  return (
-    <div className="bg-white border border-gray-100 rounded-xl p-5">
-      <p className={`text-xs font-semibold uppercase tracking-wider mb-3 ${accent}`}>{title}</p>
-      {children}
-    </div>
-  )
-}
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function GatePassDetailPage() {
-  const { id }      = useParams<{ id: string }>()
-  const [gp,        setGp]        = useState<GatePass | null>(null)
-  const [loading,   setLoading]   = useState(true)
-  const [exiting,   setExiting]   = useState(false)
-  const [pdfLoad,   setPdfLoad]   = useState(false)
-  const branding = useCompanyBranding()
+  const { id }    = useParams<{ id: string }>()
+  const branding  = useCompanyBranding()
+
+  const [gp,       setGp]       = useState<GatePass | null>(null)
+  const [loading,  setLoading]  = useState(true)
+  const [exiting,  setExiting]  = useState(false)
+  const [pdfLoad,  setPdfLoad]  = useState(false)
 
   useEffect(() => {
     fetch(`/api/gate-pass/${id}`)
@@ -135,19 +138,18 @@ export default function GatePassDetailPage() {
     setPdfLoad(false)
   }
 
-  // ── Loading ───────────────────────────────────────────────────
+  // ── Loading skeleton ──────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="animate-pulse space-y-4 max-w-2xl">
-        <div className="h-6 w-40 bg-gray-100 rounded" />
-        <div className="h-28 bg-gray-100 rounded-xl" />
-        <div className="h-40 bg-gray-100 rounded-xl" />
-        <div className="h-40 bg-gray-100 rounded-xl" />
+        <div className="h-8 w-48 bg-gray-100 rounded" />
+        <div className="h-32 bg-gray-100 rounded" />
+        <div className="h-64 bg-gray-100 rounded" />
       </div>
     )
   }
 
-  // ── Not found ─────────────────────────────────────────────────
+  // ── Not found ─────────────────────────────────────────────────────────────
   if (!gp) {
     return (
       <div className="text-center py-20">
@@ -159,348 +161,308 @@ export default function GatePassDetailPage() {
     )
   }
 
-  const isInward = gp.pass_type === 'inward'
-  const accent   = isInward ? 'text-emerald-600' : 'text-amber-600'
-  const accentBg = isInward ? 'bg-emerald-50'   : 'bg-amber-50'
+  // ── Derived values ────────────────────────────────────────────────────────
   const dt       = new Date(gp.checked_in_at)
   const dateStr  = dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
   const timeStr  = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
 
-  const infoFields: [string, string | null | undefined][] = [
-    ['Vehicle No.',   gp.vehicle_number],
-    ['Vehicle Type',  gp.vehicle_type],
-    ['Driver',        gp.driver_name],
-    ['Driver Phone',  gp.driver_phone],
-    ['License',       gp.driver_license],
-    ['Party',         gp.party_name],
-    ['Party Phone',   gp.party_phone],
-    ['Address',       gp.party_address],
-    ['Purpose',       gp.purpose],
-  ]
+  const companyName = branding?.legal_name || branding?.name || gp.company?.name || ''
+  const addressLine = [
+    branding?.address_line1,
+    branding?.address_line2,
+    branding?.city,
+    branding?.state,
+    branding?.pincode,
+  ].filter(Boolean).join(', ')
+  const contactLine = [
+    branding?.gst_number && `GST: ${branding.gst_number}`,
+    branding?.phone      && `Phone: ${branding.phone}`,
+    branding?.email      && `Email: ${branding.email}`,
+  ].filter(Boolean).join('   |   ')
+
+  // Pad to minimum 5 item rows so the table always looks like a proper form
+  const MIN_ROWS = 5
+  const itemRows = [...(gp.items ?? [])]
+  while (itemRows.length < MIN_ROWS) {
+    itemRows.push({ name: '', quantity: 0, unit: '', weight: undefined })
+  }
 
   return (
     <>
       <style>{PRINT_CSS}</style>
 
-      {/* ══════════ Screen view ══════════════════════════════════════ */}
-      <div className="scr-only max-w-2xl">
-
-        {/* Top bar: back + title + action buttons */}
-        <div className="no-print flex items-center gap-3 mb-5 flex-wrap">
-          <Link
-            href="/dashboard/gate-passes"
-            className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors flex-shrink-0"
+      {/* ── Action buttons (hidden in print) ───────────────────────────────── */}
+      <div className="no-print flex items-center justify-between mb-5">
+        <Link
+          href="/dashboard/gate-passes"
+          className="inline-flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+        >
+          <ArrowLeft size={14} /> Back
+        </Link>
+        <div className="flex items-center gap-2">
+          {gp.status === 'inside' && (
+            <button
+              onClick={markExited}
+              disabled={exiting}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg disabled:opacity-50 transition-colors"
+            >
+              {exiting ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+              Mark Exited
+            </button>
+          )}
+          <button
+            onClick={downloadPdf}
+            disabled={pdfLoad}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold rounded-lg disabled:opacity-50 transition-colors"
           >
-            <ArrowLeft size={15} />
-          </Link>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-semibold text-gray-900 leading-none">Gate Pass Detail</h1>
-            <p className="text-xs text-gray-400 mt-0.5 font-mono">{gp.pass_number}</p>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
-            {gp.status === 'inside' && (
-              <button
-                onClick={markExited}
-                disabled={exiting}
-                className="flex items-center gap-2 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg disabled:opacity-50 transition-colors"
-              >
-                {exiting ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-                Mark Exited
-              </button>
-            )}
-            <button
-              onClick={downloadPdf}
-              disabled={pdfLoad}
-              className="flex items-center gap-2 px-3 py-2 bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold rounded-lg disabled:opacity-50 transition-colors"
-            >
-              {pdfLoad ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-              Download PDF
-            </button>
-            <button
-              onClick={() => window.print()}
-              className="flex items-center gap-2 px-3 py-2 border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm font-semibold rounded-lg transition-colors"
-            >
-              <Printer size={14} />
-              Print
-            </button>
-          </div>
+            {pdfLoad ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+            Download PDF
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-semibold rounded-lg transition-colors"
+          >
+            <Printer size={14} /> Print
+          </button>
+        </div>
+      </div>
+
+      {/* ── Gate pass document ─────────────────────────────────────────────── */}
+      <div className="gp-wrapper max-w-[780px] mx-auto bg-white">
+
+        {/* Watermark */}
+        <div className="watermark" aria-hidden>
+          {companyName.toUpperCase() || 'VISBOT'}
         </div>
 
-        {/* Header card */}
-        <div className={`bg-white border rounded-xl p-5 mb-4 ${STATUS_PILL[gp.status] ?? STATUS_PILL.exited}`}>
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className={`w-11 h-11 rounded-full ${accentBg} flex items-center justify-center flex-shrink-0`}>
-                {isInward
-                  ? <ArrowDownCircle size={22} className={accent} />
-                  : <ArrowUpCircle   size={22} className={accent} />
+        {/* Document content sits above watermark */}
+        <div className="relative" style={{ zIndex: 1 }}>
+
+          {/* ── SECTION 1: Company header ───────────────────────────────────── */}
+          <div className="border-2 border-black p-4">
+            <div className="grid items-start" style={{ gridTemplateColumns: '20% 60% 20%' }}>
+              {/* Logo */}
+              <div className="flex items-center justify-center">
+                {branding?.logo_url
+                  ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={branding.logo_url}
+                      alt={companyName}
+                      style={{ width: 80, height: 80, objectFit: 'contain' }}
+                    />
+                  )
+                  : (
+                    <div
+                      className="flex items-center justify-center text-white font-bold text-2xl rounded"
+                      style={{ width: 80, height: 80, background: '#10B981', flexShrink: 0 }}
+                    >
+                      {companyName.charAt(0).toUpperCase() || 'V'}
+                    </div>
+                  )
                 }
               </div>
-              <div>
-                <p className="font-bold text-gray-900 text-xl font-mono">{gp.vehicle_number}</p>
-                <p className={`text-xs font-mono font-semibold mt-0.5 ${accent}`}>
-                  {gp.pass_type.toUpperCase()} · {gp.pass_number}
-                </p>
+
+              {/* Company details — center column */}
+              <div className="text-center px-2">
+                <p className="font-bold text-lg uppercase leading-tight">{companyName}</p>
+                {addressLine  && <p className="text-sm text-gray-700 mt-1 leading-snug">{addressLine}</p>}
+                {contactLine  && <p className="text-xs text-gray-600 mt-1">{contactLine}</p>}
+                {branding?.cin_number && (
+                  <p className="text-xs text-gray-500 mt-0.5">CIN: {branding.cin_number}</p>
+                )}
               </div>
+
+              {/* Right — intentionally empty */}
+              <div />
             </div>
-            <span className={`text-xs px-3 py-1 rounded-full border font-semibold uppercase tracking-wide flex-shrink-0 ${STATUS_PILL[gp.status] ?? STATUS_PILL.exited}`}>
-              {gp.status}
-            </span>
           </div>
-          <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
-            <span>In: {format(new Date(gp.checked_in_at), 'dd MMM yyyy, HH:mm')}</span>
-            {gp.checked_out_at && (
-              <span>Out: {format(new Date(gp.checked_out_at), 'dd MMM yyyy, HH:mm')}</span>
-            )}
-            {gp.guard?.full_name && <span>Guard: {gp.guard.full_name}</span>}
-          </div>
-        </div>
 
-        <div className="space-y-3">
-          {/* Vehicle & Driver */}
-          <Section title="Vehicle & Driver" accent={accent}>
-            <Row label="Vehicle No."  value={gp.vehicle_number} />
-            <Row label="Vehicle Type" value={gp.vehicle_type}   />
-            <Row label="Driver Name"  value={gp.driver_name}    />
-            <Row label="Driver Phone" value={gp.driver_phone}   />
-            <Row label="License No."  value={gp.driver_license} />
-          </Section>
-
-          {/* Party */}
-          <Section title="Party / Vendor" accent={accent}>
-            <Row label="Party Name"   value={gp.party_name}     />
-            <Row label="Phone"        value={gp.party_phone}    />
-            <Row label="Address"      value={gp.party_address}  />
-            <Row label="Purpose"      value={gp.purpose}        />
-            <Row label="PO Number"    value={gp.po_number}      />
-            <Row label="Invoice No."  value={gp.invoice_number} />
-          </Section>
-
-          {/* Items */}
-          <Section
-            title={`Materials${gp.total_weight != null ? ` · ${gp.total_weight} ${gp.weight_unit} total` : ''}`}
-            accent={accent}
+          {/* ── SECTION 2: Title bar ────────────────────────────────────────── */}
+          <div
+            className="text-center font-bold text-xl py-3 uppercase tracking-widest"
+            style={{ background: '#000', color: '#fff' }}
           >
-            {(gp.items ?? []).length === 0 ? (
-              <p className="text-sm text-gray-400">No items recorded.</p>
-            ) : (
-              <div>
-                {(gp.items ?? []).map((item, i) => (
-                  <div key={i} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0 text-sm">
-                    <span className="text-gray-900">{item.name}</span>
-                    <span className="text-gray-400 text-xs">
-                      {item.quantity} {item.unit}
-                      {item.weight ? ` · ${item.weight} ${gp.weight_unit}` : ''}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Section>
-
-          {/* Remarks */}
-          {gp.remarks && (
-            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
-              <p className="text-xs font-semibold text-amber-700 uppercase tracking-wider mb-1">Remarks</p>
-              <p className="text-sm text-gray-700">{gp.remarks}</p>
-            </div>
-          )}
-
-          {/* Photos */}
-          {(gp.vehicle_photo_url || gp.document_photo_url) && (
-            <div className="grid grid-cols-2 gap-3">
-              {gp.vehicle_photo_url && (
-                <div>
-                  <p className="text-xs text-gray-400 mb-1.5">Vehicle photo</p>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={gp.vehicle_photo_url} alt="Vehicle" className="w-full rounded-xl object-cover aspect-video" />
-                </div>
-              )}
-              {gp.document_photo_url && (
-                <div>
-                  <p className="text-xs text-gray-400 mb-1.5">Document photo</p>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={gp.document_photo_url} alt="Document" className="w-full rounded-xl object-cover aspect-video" />
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ══════════ Print-only A4 layout ═════════════════════════════ */}
-
-      {/* Watermark — centered, diagonal, visible only during print */}
-      <div className="prn-wm">
-        {(branding?.legal_name || branding?.name || gp.company?.name || 'VisBot').toUpperCase()}
-      </div>
-
-      <div
-        className="prn-only"
-        style={{ fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '11pt', color: '#111', lineHeight: 1.45, position: 'relative', zIndex: 1 }}
-      >
-        {/* Company header */}
-        <div className="prn-avoid" style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', paddingBottom: '12px', borderBottom: '1.5px solid #222', marginBottom: '14px' }}>
-          {branding?.logo_url && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={branding.logo_url} alt="" style={{ width: '64px', height: '64px', objectFit: 'contain', flexShrink: 0 }} />
-          )}
-          <div style={{ flex: 1 }}>
-            <p style={{ fontSize: '14pt', fontWeight: 'bold', margin: 0, textTransform: 'uppercase', letterSpacing: '0.3px' }}>
-              {branding?.legal_name || branding?.name || gp.company?.name || ''}
-            </p>
-            {branding?.address_line1 && (
-              <p style={{ margin: '3px 0 0', fontSize: '10pt', color: '#444' }}>{branding.address_line1}</p>
-            )}
-            {(branding?.city || branding?.state || branding?.pincode) && (
-              <p style={{ margin: '2px 0 0', fontSize: '10pt', color: '#444' }}>
-                {[branding?.city, branding?.state, branding?.pincode].filter(Boolean).join(', ')}
-              </p>
-            )}
-            {(branding?.gst_number || branding?.cin_number) && (
-              <p style={{ margin: '2px 0 0', fontSize: '9pt', color: '#555' }}>
-                {[
-                  branding?.gst_number && `GST: ${branding.gst_number}`,
-                  branding?.cin_number && `CIN: ${branding.cin_number}`,
-                ].filter(Boolean).join('   |   ')}
-              </p>
-            )}
-            {(branding?.phone || branding?.email) && (
-              <p style={{ margin: '2px 0 0', fontSize: '9pt', color: '#555' }}>
-                {[branding?.phone, branding?.email].filter(Boolean).join('   ·   ')}
-              </p>
-            )}
+            Material Gate Pass
           </div>
-        </div>
 
-        {/* Title */}
-        <div className="prn-avoid" style={{ textAlign: 'center', marginBottom: '14px' }}>
-          <p style={{ fontSize: '18pt', fontWeight: 'bold', margin: 0, letterSpacing: '1px' }}>MATERIAL GATE PASS</p>
-          <p style={{ fontSize: '10pt', margin: '4px 0 0', color: '#555', fontFamily: 'Courier New, monospace' }}>
-            {gp.pass_number}
-          </p>
-          <p style={{ margin: '8px 0 0', fontWeight: 'bold', fontSize: '11pt', color: '#000', textTransform: 'uppercase' }}>
-            Direction: {gp.pass_type.toUpperCase()}
-          </p>
-        </div>
-
-        {/* Date / PO row */}
-        <div className="prn-avoid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 24px', marginBottom: '14px', fontSize: '10pt' }}>
-          <div><span style={{ color: '#555' }}>Date:</span> <strong>{dateStr}</strong></div>
-          <div><span style={{ color: '#555' }}>Time:</span> <strong>{timeStr}</strong></div>
-          {gp.po_number      && <div><span style={{ color: '#555' }}>PO #:</span> <strong>{gp.po_number}</strong></div>}
-          {gp.invoice_number && <div><span style={{ color: '#555' }}>Invoice #:</span> <strong>{gp.invoice_number}</strong></div>}
-          {gp.status === 'exited' && gp.checked_out_at && (
-            <div style={{ gridColumn: '1 / -1' }}>
-              <span style={{ color: '#555' }}>Exit:</span>{' '}
-              <strong>
-                {new Date(gp.checked_out_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                {' '}
-                {new Date(gp.checked_out_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-              </strong>
+          {/* ── SECTION 3: Meta info ────────────────────────────────────────── */}
+          <div className="border border-t-0 border-black p-3">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
+              <div className="flex gap-2">
+                <span className="font-semibold w-28 flex-shrink-0">Pass No.</span>
+                <span className="font-mono">{gp.pass_number}</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-semibold w-28 flex-shrink-0">Direction</span>
+                <span className="font-bold uppercase">{gp.pass_type}</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-semibold w-28 flex-shrink-0">Date</span>
+                <span>{dateStr}</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-semibold w-28 flex-shrink-0">PO Number</span>
+                <span>{gp.po_number || '—'}</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-semibold w-28 flex-shrink-0">Time</span>
+                <span>{timeStr}</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="font-semibold w-28 flex-shrink-0">Invoice No.</span>
+                <span>{gp.invoice_number || '—'}</span>
+              </div>
+              {gp.status === 'exited' && gp.checked_out_at && (
+                <div className="flex gap-2 col-span-2">
+                  <span className="font-semibold w-28 flex-shrink-0">Exit Time</span>
+                  <span>
+                    {new Date(gp.checked_out_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    {' '}
+                    {new Date(gp.checked_out_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
 
-        <hr style={{ border: 'none', borderTop: '1px solid #DDD', margin: '10px 0 12px' }} />
-
-        {/* Items table */}
-        <div className="prn-avoid" style={{ marginBottom: '14px' }}>
-          <p style={{ fontWeight: 'bold', fontSize: '9.5pt', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 6px', color: '#333' }}>
-            Items
-          </p>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10pt', border: '1px solid #000' }}>
+          {/* ── SECTION 4: Items table ──────────────────────────────────────── */}
+          <table className="gp-table border-2 border-black border-t-0">
             <thead>
-              <tr style={{ background: '#000', color: '#FFF' }}>
-                <th style={{ padding: '8px', textAlign: 'left', fontWeight: 'bold', border: '1px solid #000' }}>Item</th>
-                <th style={{ padding: '8px', textAlign: 'left', fontWeight: 'bold', border: '1px solid #000', width: '55px' }}>Qty</th>
-                <th style={{ padding: '8px', textAlign: 'left', fontWeight: 'bold', border: '1px solid #000', width: '55px' }}>Unit</th>
-                <th style={{ padding: '8px', textAlign: 'left', fontWeight: 'bold', border: '1px solid #000', width: '90px' }}>Weight / Remarks</th>
+              <tr>
+                <th className="text-center w-8">#</th>
+                <th className="text-left" style={{ minWidth: '200px' }}>Item Description</th>
+                <th className="text-center w-16">Qty</th>
+                <th className="text-center w-16">Unit</th>
+                <th className="text-center w-20">Weight</th>
+                <th className="text-left">Remarks</th>
               </tr>
             </thead>
             <tbody>
-              {(gp.items ?? []).map((item, i) => (
-                <tr key={i} style={{ background: '#FFF' }}>
-                  <td style={{ padding: '8px', border: '1px solid #000' }}>{item.name}</td>
-                  <td style={{ padding: '8px', border: '1px solid #000' }}>{item.quantity}</td>
-                  <td style={{ padding: '8px', border: '1px solid #000' }}>{item.unit}</td>
-                  <td style={{ padding: '8px', border: '1px solid #000' }}>
-                    {item.weight != null ? `${item.weight} ${gp.weight_unit}` : '—'}
+              {itemRows.map((item, i) => (
+                <tr key={i} style={{ minHeight: '32px', height: '32px' }}>
+                  <td className="text-center text-sm">
+                    {item.name ? i + 1 : ' '}
                   </td>
+                  <td className="text-sm">{item.name || ' '}</td>
+                  <td className="text-center text-sm">
+                    {item.name ? item.quantity : ' '}
+                  </td>
+                  <td className="text-center text-sm">
+                    {item.name ? item.unit : ' '}
+                  </td>
+                  <td className="text-center text-sm">
+                    {item.name && item.weight != null ? `${item.weight} ${gp.weight_unit}` : ' '}
+                  </td>
+                  <td className="text-sm">{' '}</td>
                 </tr>
               ))}
+              {/* Total row */}
               {gp.total_weight != null && (
-                <tr style={{ background: '#F0F0F0', fontWeight: 'bold' }}>
-                  <td colSpan={2} style={{ padding: '8px', border: '1px solid #000' }} />
-                  <td style={{ padding: '8px', border: '1px solid #000' }}>Total</td>
-                  <td style={{ padding: '8px', border: '1px solid #000' }}>{gp.total_weight} {gp.weight_unit}</td>
+                <tr style={{ background: '#F5F5F5' }}>
+                  <td colSpan={4} className="text-right font-semibold text-sm pr-2">Total Weight</td>
+                  <td className="text-center font-semibold text-sm">{gp.total_weight} {gp.weight_unit}</td>
+                  <td>{' '}</td>
                 </tr>
               )}
             </tbody>
           </table>
-        </div>
 
-        <hr style={{ border: 'none', borderTop: '1px solid #DDD', margin: '10px 0 12px' }} />
-
-        {/* Carrier / vehicle info — 2 col grid */}
-        <div className="prn-avoid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 24px', marginBottom: '14px', fontSize: '10pt' }}>
-          {infoFields.filter(([, v]) => v).map(([label, val]) => (
-            <div key={label}>
-              <span style={{ color: '#555' }}>{label}:</span>{' '}
-              <strong style={{ wordBreak: 'break-word' }}>{val}</strong>
+          {/* ── SECTION 5: Party & transport ────────────────────────────────── */}
+          <div className="border border-t-0 border-black p-3">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+              {/* Left: party */}
+              <div className="space-y-3">
+                <LabelVal label="Party / Vendor Name"   value={gp.party_name}    />
+                <LabelVal label="Destination / Source"  value={gp.party_address} />
+                <LabelVal label="Purpose"               value={gp.purpose}       />
+              </div>
+              {/* Right: transport */}
+              <div className="space-y-3">
+                <LabelVal label="Carrier Name"          value={gp.driver_name}    />
+                <LabelVal label="Carrier Phone"         value={gp.driver_phone}   />
+                <LabelVal label="Vehicle No."           value={gp.vehicle_number} />
+                <LabelVal label="Vehicle Type"          value={gp.vehicle_type}   />
+                <LabelVal label="License No."           value={gp.driver_license} />
+              </div>
             </div>
-          ))}
-        </div>
-
-        {/* Remarks */}
-        {gp.remarks && (
-          <div className="prn-avoid" style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '4px', padding: '8px 12px', marginBottom: '14px', fontSize: '10pt' }}>
-            <p style={{ fontWeight: 'bold', margin: '0 0 3px', color: '#92400E', fontSize: '9pt', textTransform: 'uppercase' }}>Remarks</p>
-            <p style={{ margin: 0, color: '#333' }}>{gp.remarks}</p>
           </div>
-        )}
 
-        <hr style={{ border: 'none', borderTop: '1px solid #DDD', margin: '10px 0 14px' }} />
+          {/* ── SECTION 6: Remarks ──────────────────────────────────────────── */}
+          <div className="border border-t-0 border-black p-3">
+            <p className="font-semibold text-sm mb-1">Remarks:</p>
+            <p className="text-sm" style={{ minHeight: '36px' }}>{gp.remarks || ''}</p>
+          </div>
 
-        {/* Signature & Stamp — side-by-side rectangles */}
-        <div className="prn-avoid" style={{ display: 'flex', gap: '32px' }}>
-          <div>
-            <div style={{ width: '180px', height: '80px', border: '1px solid #D4D4D8', borderRadius: '6px', overflow: 'hidden', background: '#FAFAFA' }}>
-              {branding?.signature_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={branding.signature_url} alt="Signature" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          {/* ── SECTION 7: Signatures ───────────────────────────────────────── */}
+          <div className="border border-t-0 border-black grid grid-cols-3 divide-x divide-black">
+            {/* Prepared by */}
+            <div className="p-4">
+              <p className="text-xs font-semibold text-gray-600 mb-2">Prepared by</p>
+              <div
+                className="border border-dashed border-gray-300 flex items-center justify-center"
+                style={{ height: 80 }}
+              />
+              {gp.guard?.full_name && (
+                <p className="text-xs font-semibold mt-2">{gp.guard.full_name}</p>
               )}
+              <p className="text-xs text-gray-400 mt-0.5">Guard / Operator</p>
             </div>
-            <div style={{ marginTop: '6px', fontSize: '9.5pt', color: '#222' }}>
-              {branding?.authorized_signatory_name
-                ? <p style={{ margin: 0, fontWeight: 'bold' }}>Name: {branding.authorized_signatory_name}</p>
-                : <p style={{ margin: 0, color: '#888' }}>Authorized Signatory</p>
-              }
+
+            {/* Authorized Signatory */}
+            <div className="p-4">
+              <p className="text-xs font-semibold text-gray-600 mb-2">Authorized Signatory</p>
+              <div
+                className="border border-dashed border-gray-300 flex items-center justify-center overflow-hidden"
+                style={{ height: 80 }}
+              >
+                {branding?.signature_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={branding.signature_url}
+                    alt="Signature"
+                    className="max-w-full max-h-full object-contain"
+                  />
+                )}
+              </div>
+              {branding?.authorized_signatory_name && (
+                <p className="text-xs font-semibold mt-2">{branding.authorized_signatory_name}</p>
+              )}
               {branding?.authorized_signatory_designation && (
-                <p style={{ margin: '2px 0 0', color: '#555' }}>Designation: {branding.authorized_signatory_designation}</p>
+                <p className="text-xs text-gray-500 mt-0.5">{branding.authorized_signatory_designation}</p>
               )}
+            </div>
+
+            {/* Receiver / Stamp */}
+            <div className="p-4">
+              <p className="text-xs font-semibold text-gray-600 mb-2">Receiver&apos;s Signature</p>
+              <div
+                className="border border-dashed border-gray-300 flex items-center justify-center overflow-hidden"
+                style={{ height: 80 }}
+              >
+                {branding?.stamp_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={branding.stamp_url}
+                    alt="Company Seal"
+                    className="max-w-full max-h-full object-contain"
+                  />
+                )}
+              </div>
+              <p className="text-xs text-gray-400 mt-2">Company Seal</p>
             </div>
           </div>
 
-          <div>
-            <div style={{ width: '180px', height: '80px', border: '1px solid #D4D4D8', borderRadius: '6px', overflow: 'hidden', background: '#FAFAFA' }}>
-              {branding?.stamp_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={branding.stamp_url} alt="Company Seal" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-              )}
-            </div>
-            <p style={{ margin: '6px 0 0', fontSize: '9.5pt', color: '#555' }}>Company Seal</p>
+          {/* ── SECTION 8: Footer ───────────────────────────────────────────── */}
+          <div className="border border-t-0 border-black p-3 text-center">
+            <p className="text-xs text-gray-500">
+              {branding?.footer_text || 'This is a system-generated document. Subject to terms and conditions.'}
+            </p>
+            <p className="text-xs text-gray-400 mt-0.5">Generated by VisBot · visbot.app</p>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div style={{ marginTop: '28px', borderTop: '1px solid #E5E5E5', paddingTop: '10px', textAlign: 'center', fontSize: '8pt', color: '#999' }}>
-          <p style={{ margin: 0 }}>
-            {branding?.footer_text || 'This is a system-generated document. Valid for one-time use only.'}
-          </p>
-          <p style={{ margin: '3px 0 0' }}>Generated by VisBot · visbot.app</p>
-        </div>
-      </div>
+        </div>{/* /relative z-1 */}
+      </div>{/* /gp-wrapper */}
     </>
   )
 }
