@@ -62,7 +62,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
       {/* ── Sidebar: hidden on mobile, drawer on tablet, fixed on desktop ─ */}
       <div className={[
-        'fixed inset-y-0 left-0 z-30 transition-transform duration-200 ease-in-out',
+        'no-print fixed inset-y-0 left-0 z-30 transition-transform duration-200 ease-in-out',
         'hidden md:block',                                        // ← invisible on mobile
         'lg:static lg:z-auto lg:translate-x-0',
         mobileOpen ? 'translate-x-0' : '-translate-x-full',

@@ -70,6 +70,11 @@ export default function GatePassDetailPage() {
 
   return (
     <>
+      {/* ── Print tip ──────────────────────────────────────────────────────── */}
+      <div className="no-print bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4 text-sm text-blue-700">
+        Tip: In the print dialog, uncheck &quot;Headers and footers&quot; for a clean printout.
+      </div>
+
       {/* ── Action buttons (hidden in print) ───────────────────────────────── */}
       <div className="no-print flex items-center justify-between mb-5">
         <Link

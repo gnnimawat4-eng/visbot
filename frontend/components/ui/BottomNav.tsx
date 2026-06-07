@@ -35,7 +35,7 @@ export function BottomNav({ primary, secondary = [] }: BottomNavProps) {
       {/* More-sheet backdrop */}
       {moreOpen && (
         <div
-          className="fixed inset-0 z-40 md:hidden"
+          className="no-print fixed inset-0 z-40 md:hidden"
           style={{ background: 'rgba(0,0,0,0.45)' }}
           onClick={() => setMoreOpen(false)}
         />
@@ -46,7 +46,7 @@ export function BottomNav({ primary, secondary = [] }: BottomNavProps) {
         <div
           aria-hidden={!moreOpen}
           className={[
-            'fixed inset-x-0 bottom-0 z-50 md:hidden rounded-t-2xl',
+            'no-print fixed inset-x-0 bottom-0 z-50 md:hidden rounded-t-2xl',
             'transition-transform duration-300 ease-out',
             moreOpen ? 'translate-y-0' : 'translate-y-full',
           ].join(' ')}
@@ -86,7 +86,7 @@ export function BottomNav({ primary, secondary = [] }: BottomNavProps) {
 
       {/* Bottom nav bar — hidden on md+ */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-30 flex md:hidden"
+        className="no-print fixed inset-x-0 bottom-0 z-30 flex md:hidden"
         style={{
           background: '#FFFFFF',
           borderTop: '1px solid #EAEAEA',

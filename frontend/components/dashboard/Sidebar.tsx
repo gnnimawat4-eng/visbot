@@ -102,7 +102,7 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
 
   return (
     <aside
-      className={collapsed ? 'w-[60px]' : 'w-[220px]'}
+      className={`no-print ${collapsed ? 'w-[60px]' : 'w-[220px]'}`}
       style={{
         height: '100%',
         background: S.bg,

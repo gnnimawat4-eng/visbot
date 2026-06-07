@@ -35,7 +35,7 @@ export function Topbar({ onMenuClick }: Props) {
 
   return (
     <header
-      className="h-14 flex items-center justify-between px-4 sm:px-6 flex-shrink-0"
+      className="no-print h-14 flex items-center justify-between px-4 sm:px-6 flex-shrink-0"
       style={{ background: '#FFFFFF', borderBottom: '1px solid #EAEAEA' }}
     >
       <div className="flex items-center gap-3">

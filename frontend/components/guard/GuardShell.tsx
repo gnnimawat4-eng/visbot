@@ -92,7 +92,7 @@ export default function GuardShell({ children }: { children: React.ReactNode }) 
 
   const Sidebar = (
     <aside
-      className={collapsed ? 'w-[60px]' : 'w-[220px]'}
+      className={`no-print ${collapsed ? 'w-[60px]' : 'w-[220px]'}`}
       style={{
         height: '100%',
         background: S.bg,
@@ -241,7 +241,7 @@ export default function GuardShell({ children }: { children: React.ReactNode }) 
 
         {/* Sidebar: hidden mobile, drawer tablet, fixed desktop */}
         <div className={[
-          'fixed inset-y-0 left-0 z-30 transition-transform duration-200 ease-in-out',
+          'no-print fixed inset-y-0 left-0 z-30 transition-transform duration-200 ease-in-out',
           'hidden md:block',
           'lg:static lg:z-auto lg:translate-x-0',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
@@ -252,7 +252,7 @@ export default function GuardShell({ children }: { children: React.ReactNode }) 
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Topbar */}
           <header
-            className="h-14 flex items-center justify-between px-4 sm:px-6 flex-shrink-0"
+            className="no-print h-14 flex items-center justify-between px-4 sm:px-6 flex-shrink-0"
             style={{ background: S.bg, borderBottom: `1px solid ${S.border}` }}
           >
             <div className="flex items-center gap-3">

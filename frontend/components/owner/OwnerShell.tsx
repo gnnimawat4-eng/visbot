@@ -57,7 +57,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
 
   const Sidebar = (
     <aside
-      className={collapsed ? 'w-[60px]' : 'w-[220px]'}
+      className={`no-print ${collapsed ? 'w-[60px]' : 'w-[220px]'}`}
       style={{
         height: '100%',
         background: S.bg,
@@ -196,7 +196,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
 
       {/* Sidebar */}
       <div className={[
-        'fixed inset-y-0 left-0 z-30 transition-transform duration-200 ease-in-out',
+        'no-print fixed inset-y-0 left-0 z-30 transition-transform duration-200 ease-in-out',
         'hidden md:block',
         'lg:static lg:z-auto lg:translate-x-0',
         mobileOpen ? 'translate-x-0' : '-translate-x-full',
@@ -207,7 +207,7 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Topbar */}
         <header
-          className="h-14 flex items-center px-4 sm:px-6 flex-shrink-0 gap-3"
+          className="no-print h-14 flex items-center px-4 sm:px-6 flex-shrink-0 gap-3"
           style={{ background: S.bg, borderBottom: `1px solid ${S.border}` }}
         >
           <button

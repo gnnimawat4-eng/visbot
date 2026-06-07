@@ -35,6 +35,16 @@ const PRINT_CSS = `
   @page { size: A4 portrait; margin: 15mm; }
 
   @media print {
+    /* Hide everything; only .print-content and its children remain visible */
+    body * { visibility: hidden; }
+    .print-content, .print-content * { visibility: visible; }
+    .print-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+    }
+
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     body { margin: 0; }
     .no-print { display: none !important; }
@@ -122,7 +132,7 @@ export function GatePassDocument({ gp, branding }: Props) {
     <>
       <style>{PRINT_CSS}</style>
 
-      <div className="gp-wrapper max-w-[780px] mx-auto bg-white">
+      <div className="gp-wrapper print-content max-w-[780px] mx-auto bg-white">
         {/* Watermark */}
         <div className="watermark" aria-hidden>
           {companyName.toUpperCase() || 'VISBOT'}
