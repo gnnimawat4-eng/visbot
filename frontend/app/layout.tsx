@@ -25,14 +25,14 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#0A0A0A',
+  themeColor: '#16A34A',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geist.variable} font-sans antialiased`} style={{ background: '#0A0A0A' }}>
-        <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" storageKey="visbot-theme" disableTransitionOnChange>
+      <body className={`${geist.variable} font-sans antialiased`}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true} storageKey="visbot-theme" disableTransitionOnChange>
           {children}
           <Toaster position="top-right" />
         </ThemeProvider>
