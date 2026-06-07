@@ -1,21 +1,26 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut, Menu } from 'lucide-react'
+import { LogOut, Menu, Bell } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 interface Props { onMenuClick?: () => void }
 
 export function Topbar({ onMenuClick }: Props) {
   const router = useRouter()
-  const [companyName, setCompanyName] = useState<string>('')
+  const [companyName, setCompanyName] = useState('')
+  const [userInitial, setUserInitial] = useState('?')
 
   useEffect(() => {
     fetch('/api/dashboard/company')
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.name) setCompanyName(d.name) })
       .catch(() => {})
+
+    createClient().auth.getUser().then(({ data }) => {
+      const email = data.user?.email ?? ''
+      setUserInitial(email[0]?.toUpperCase() ?? '?')
+    })
   }, [])
 
   const logout = async () => {
@@ -27,37 +32,56 @@ export function Topbar({ onMenuClick }: Props) {
   return (
     <header
       className="h-14 flex items-center justify-between px-4 sm:px-6 flex-shrink-0"
-      style={{ background: 'var(--vb-bg-sidebar)', borderBottom: '1px solid var(--vb-border)' }}
+      style={{ background: '#FFFFFF', borderBottom: '1px solid #EAEAEA' }}
     >
       <div className="flex items-center gap-3">
         {/* Hamburger: tablet only (md → lg) */}
         <button
           onClick={onMenuClick}
-          className="hidden md:flex lg:hidden items-center justify-center w-8 h-8 rounded-md transition-colors -ml-1"
-          style={{ color: 'var(--vb-text-3)' }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--vb-bg-hover)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+          className="hidden md:flex lg:hidden items-center justify-center w-8 h-8 rounded-lg transition-colors -ml-1"
+          style={{ color: '#9CA3AF' }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#F5F5F5'; e.currentTarget.style.color = '#6B7280' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9CA3AF' }}
           aria-label="Open menu"
         >
           <Menu size={16} />
         </button>
-        <p className="text-sm font-medium" style={{ color: 'var(--vb-text)' }}>
+        <span className="text-sm font-medium" style={{ color: '#0A0A0A' }}>
           {companyName || 'Dashboard'}
-        </p>
+        </span>
       </div>
 
       <div className="flex items-center gap-1">
-        <ThemeToggle />
+        {/* Bell */}
+        <button
+          className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+          style={{ color: '#9CA3AF' }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#F5F5F5'; e.currentTarget.style.color = '#6B7280' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9CA3AF' }}
+          aria-label="Notifications"
+        >
+          <Bell size={15} />
+        </button>
+
+        {/* Logout (icon only) */}
         <button
           onClick={logout}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-          style={{ color: 'var(--vb-text-3)' }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--vb-bg-hover)'; e.currentTarget.style.color = 'var(--vb-text-2)'; }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--vb-text-3)'; }}
+          className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+          style={{ color: '#9CA3AF' }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#F5F5F5'; e.currentTarget.style.color = '#6B7280' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9CA3AF' }}
+          title="Sign out"
         >
-          <LogOut size={14} />
-          <span className="hidden sm:inline">Sign out</span>
+          <LogOut size={15} />
         </button>
+
+        {/* User avatar */}
+        <div
+          className="ml-1 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold select-none"
+          style={{ background: '#18181B', color: '#FFFFFF' }}
+        >
+          {userInitial}
+        </div>
       </div>
     </header>
   )

@@ -28,23 +28,23 @@
     --radius:            0.375rem;     /* 6px — tighter than old 8px */
 
     /* ── VisBot semantic tokens — light ──────────────────────────────────── */
-    --vb-bg:             #FFFFFF;
-    --vb-bg-sidebar:     #FAFAFA;      /* slightly off-white sidebar */
+    --vb-bg:             #FAFAFA;
+    --vb-bg-sidebar:     #0A0A0A;
     --vb-bg-card:        #FFFFFF;
-    --vb-bg-hover:       #F4F4F5;      /* zinc-100 */
-    --vb-bg-active:      #F4F4F5;      /* neutral, not brand-tinted */
+    --vb-bg-hover:       #F5F5F5;
+    --vb-bg-active:      #EFEFEF;
     --vb-input:          #FFFFFF;
-    --vb-input-border:   #D4D4D8;      /* zinc-300 */
-    --vb-text:           #09090B;      /* zinc-950 */
-    --vb-text-2:         #52525B;      /* zinc-600 */
-    --vb-text-3:         #A1A1AA;      /* zinc-400 */
-    --vb-border:         #E4E4E7;      /* zinc-200 */
-    --vb-border-2:       #F4F4F5;      /* zinc-100 */
-    /* Brand: used ONLY for logo + primary CTA buttons */
-    --vb-accent:         #16A34A;      /* green-600 — not neon */
-    --vb-accent-hover:   #15803D;      /* green-700 */
-    --vb-accent-ring:    rgba(22,163,74,0.25);
+    --vb-input-border:   #E5E7EB;
+    --vb-text:           #0A0A0A;
+    --vb-text-2:         #6B7280;
+    --vb-text-3:         #9CA3AF;
+    --vb-border:         #EAEAEA;
+    --vb-border-2:       #F5F5F5;
+    --vb-accent:         #18181B;
+    --vb-accent-hover:   #27272A;
+    --vb-accent-ring:    rgba(24,24,27,0.12);
     --vb-accent-text:    #FFFFFF;
+    --vb-success:        #10B981;
   }
 
   /* ── Dark mode ──────────────────────────────────────────────────────────── */

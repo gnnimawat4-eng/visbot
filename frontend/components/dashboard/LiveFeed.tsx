@@ -12,21 +12,36 @@ interface FeedRow {
   created_at: string
 }
 
+const AVATAR_COLORS = [
+  { bg: '#ECFDF5', text: '#059669' },
+  { bg: '#EFF6FF', text: '#2563EB' },
+  { bg: '#FFF7ED', text: '#EA580C' },
+  { bg: '#FDF4FF', text: '#9333EA' },
+  { bg: '#FFF1F2', text: '#E11D48' },
+  { bg: '#F0F9FF', text: '#0284C7' },
+]
+
+function avatarColor(name: string) {
+  let h = 0
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) | 0
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length]
+}
+
 function initials(name: string) {
   return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
 function FeedSkeleton() {
   return (
-    <div className="space-y-2 animate-pulse">
+    <div className="animate-pulse">
       {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="flex items-center gap-3 py-2">
-          <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex-shrink-0" />
+        <div key={i} className="flex items-center gap-3 py-3" style={{ borderBottom: '1px solid #F5F5F5' }}>
+          <div className="w-8 h-8 rounded-full flex-shrink-0" style={{ background: '#F5F5F5' }} />
           <div className="flex-1 space-y-1.5">
-            <div className="h-3 w-28 bg-gray-100 dark:bg-gray-800 rounded" />
-            <div className="h-2.5 w-20 bg-gray-100 dark:bg-gray-800 rounded" />
+            <div className="h-3 w-28 rounded" style={{ background: '#F5F5F5' }} />
+            <div className="h-2.5 w-20 rounded" style={{ background: '#F5F5F5' }} />
           </div>
-          <div className="h-5 w-8 bg-gray-100 dark:bg-gray-800 rounded-full" />
+          <div className="h-5 w-10 rounded-full" style={{ background: '#F5F5F5' }} />
         </div>
       ))}
     </div>
@@ -34,7 +49,7 @@ function FeedSkeleton() {
 }
 
 export function LiveFeed() {
-  const [feed, setFeed]       = useState<FeedRow[]>([])
+  const [feed,    setFeed]    = useState<FeedRow[]>([])
   const [loading, setLoading] = useState(true)
   const companyId = process.env.NEXT_PUBLIC_COMPANY_ID ?? ''
   const channelRef = useRef<ReturnType<ReturnType<typeof createClient>['channel']> | null>(null)
@@ -60,41 +75,62 @@ export function LiveFeed() {
   }, [companyId])
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-5">
+    <div style={{ background: '#FFFFFF', border: '1px solid #EAEAEA', borderRadius: '12px', padding: '20px' }}>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Live check-in feed</h2>
-        <span className="text-xs bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full font-medium">● Live</span>
+        <h2 className="text-sm font-semibold" style={{ color: '#0A0A0A' }}>Live Check-in Feed</h2>
+        <div
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+          style={{ background: '#ECFDF5', color: '#059669' }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#10B981' }} />
+          Live
+        </div>
       </div>
 
       {loading ? (
         <FeedSkeleton />
       ) : feed.length === 0 ? (
-        <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">No check-ins yet today</p>
+        <p className="text-sm text-center py-8" style={{ color: '#9CA3AF' }}>No check-ins yet today</p>
       ) : (
-        <div className="space-y-0">
-          {feed.map(row => (
-            <div key={row.id} className="flex items-center gap-3 py-2 border-b border-gray-50 dark:border-gray-800 last:border-0">
-              {row.photo_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={row.photo_url} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-brand-50 dark:bg-brand-500/10 flex items-center justify-center text-xs font-semibold text-brand-600 dark:text-brand-400 flex-shrink-0">
-                  {initials(row.visitor?.name ?? '?')}
+        <div>
+          {feed.map(row => {
+            const name = row.visitor?.name ?? '?'
+            const color = avatarColor(name)
+            return (
+              <div
+                key={row.id}
+                className="flex items-center gap-3 py-2.5 -mx-1 px-1 rounded-lg transition-colors last:border-0"
+                style={{ borderBottom: '1px solid #F5F5F5' }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#FAFAFA' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
+              >
+                {row.photo_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={row.photo_url} alt="" className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                    style={{ background: color.bg, color: color.text }}
+                  >
+                    {initials(name)}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: '#0A0A0A' }}>{name}</p>
+                  <p className="text-xs truncate" style={{ color: '#9CA3AF' }}>{row.purpose} · {row.host_name}</p>
                 </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{row.visitor?.name ?? '—'}</p>
-                <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{row.purpose} · {row.host_name}</p>
+                <span
+                  className="flex-shrink-0 text-xs px-2.5 py-1 rounded-full font-medium"
+                  style={row.status === 'checked_in'
+                    ? { background: '#ECFDF5', color: '#059669' }
+                    : { background: '#FEF2F2', color: '#DC2626' }
+                  }
+                >
+                  {row.status === 'checked_in' ? 'In' : 'Out'}
+                </span>
               </div>
-              <span className={`flex-shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${
-                row.status === 'checked_in'
-                  ? 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-400'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'
-              }`}>
-                {row.status === 'checked_in' ? 'In' : 'Out'}
-              </span>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

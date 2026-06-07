@@ -7,8 +7,8 @@ export default function DashboardPage() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-xl font-semibold" style={{ color: 'var(--vb-text)' }}>Overview</h1>
-        <p className="text-sm mt-0.5" style={{ color: 'var(--vb-text-3)' }}>Today&apos;s activity at a glance</p>
+        <h1 className="text-2xl font-semibold tracking-tight" style={{ color: '#0A0A0A' }}>Overview</h1>
+        <p className="text-sm mt-1" style={{ color: '#9CA3AF' }}>Today&apos;s activity at a glance</p>
       </div>
       <StatsCards />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">

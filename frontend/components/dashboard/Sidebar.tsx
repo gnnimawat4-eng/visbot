@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import {
   LayoutDashboard, Users, Package, Settings,
   Truck, Shield, ChevronLeft, ChevronRight, X,
@@ -9,28 +10,69 @@ import {
 } from 'lucide-react'
 import { useConfig } from '@/lib/config'
 
-const NAV: {
+// Sidebar is always dark — hardcoded colors, no CSS vars
+const S = {
+  bg:         '#0A0A0A',
+  border:     'rgba(255,255,255,0.07)',
+  text:       '#A1A1AA',
+  textActive: '#FFFFFF',
+  activeBg:   '#1C1C1F',
+  hoverBg:    'rgba(255,255,255,0.04)',
+  logo:       '#FFFFFF',
+  logoGreen:  '#10B981',
+  label:      'rgba(255,255,255,0.22)',
+  badgeBg:    '#111111',
+} as const
+
+interface NavItem {
   href: string
-  icon: React.ComponentType<{ size?: string | number; className?: string }>
+  icon: React.ComponentType<{ size?: number; className?: string }>
   label: string
   module?: string
-}[] = [
-  { href: '/dashboard',                    icon: LayoutDashboard, label: 'Overview'       },
-  { href: '/dashboard/analytics',          icon: BarChart2,       label: 'Analytics',       module: 'analytics'   },
-  { href: '/dashboard/visitors',           icon: Users,           label: 'Visitors',         module: 'visitors'    },
-  { href: '/dashboard/groups',             icon: Users,           label: 'Groups',           module: 'groups'      },
-  { href: '/dashboard/invitations',        icon: CalendarCheck,   label: 'Invitations',      module: 'invitations' },
-  { href: '/dashboard/approvals',          icon: CheckSquare,     label: 'Approvals',        module: 'approvals'   },
-  { href: '/dashboard/materials',          icon: Package,         label: 'Materials',        module: 'materials'   },
-  { href: '/dashboard/gate-passes',        icon: Truck,           label: 'Gate Passes',      module: 'gate_passes' },
-  { href: '/dashboard/vendors',            icon: Store,           label: 'Vendors',          module: 'vendors'     },
-  { href: '/dashboard/blacklist',          icon: AlertTriangle,   label: 'Blacklist',        module: 'blacklist'   },
-  { href: '/dashboard/guards',             icon: Shield,          label: 'Guards'            },
-  { href: '/dashboard/hosts',              icon: Phone,           label: 'Hosts'             },
-  { href: '/dashboard/sms-log',            icon: MessageSquare,   label: 'SMS Log'           },
-  { href: '/dashboard/my-preferences',     icon: UserCog,         label: 'My Preferences'    },
-  { href: '/dashboard/settings',           icon: Settings,        label: 'Settings'          },
-  { href: '/dashboard/settings/customize', icon: Sliders,         label: 'Customize'         },
+}
+
+const SECTIONS: { label: string; items: NavItem[] }[] = [
+  {
+    label: 'OVERVIEW',
+    items: [
+      { href: '/dashboard',           icon: LayoutDashboard, label: 'Overview'  },
+      { href: '/dashboard/analytics', icon: BarChart2,       label: 'Analytics', module: 'analytics' },
+    ],
+  },
+  {
+    label: 'VISITORS',
+    items: [
+      { href: '/dashboard/visitors',    icon: Users,         label: 'Visitors',    module: 'visitors'    },
+      { href: '/dashboard/groups',      icon: Users,         label: 'Groups',      module: 'groups'      },
+      { href: '/dashboard/invitations', icon: CalendarCheck, label: 'Invitations', module: 'invitations' },
+      { href: '/dashboard/approvals',   icon: CheckSquare,   label: 'Approvals',   module: 'approvals'   },
+    ],
+  },
+  {
+    label: 'LOGISTICS',
+    items: [
+      { href: '/dashboard/materials',   icon: Package,       label: 'Materials',   module: 'materials'   },
+      { href: '/dashboard/gate-passes', icon: Truck,         label: 'Gate Passes', module: 'gate_passes' },
+      { href: '/dashboard/vendors',     icon: Store,         label: 'Vendors',     module: 'vendors'     },
+    ],
+  },
+  {
+    label: 'SECURITY',
+    items: [
+      { href: '/dashboard/blacklist', icon: AlertTriangle, label: 'Blacklist', module: 'blacklist' },
+      { href: '/dashboard/guards',    icon: Shield,        label: 'Guards'    },
+      { href: '/dashboard/hosts',     icon: Phone,         label: 'Hosts'     },
+    ],
+  },
+  {
+    label: 'SYSTEM',
+    items: [
+      { href: '/dashboard/sms-log',            icon: MessageSquare, label: 'SMS Log'        },
+      { href: '/dashboard/my-preferences',     icon: UserCog,       label: 'My Preferences' },
+      { href: '/dashboard/settings',           icon: Settings,      label: 'Settings'       },
+      { href: '/dashboard/settings/customize', icon: Sliders,       label: 'Customize'      },
+    ],
+  },
 ]
 
 interface Props {
@@ -41,90 +83,151 @@ interface Props {
 
 export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
   const pathname = usePathname()
-  const config   = useConfig()
+  const config = useConfig()
+  const [companyName, setCompanyName] = useState('')
 
-  const visibleNav = NAV.filter(item => {
+  useEffect(() => {
+    fetch('/api/dashboard/company')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.name) setCompanyName(d.name) })
+      .catch(() => {})
+  }, [])
+
+  function isVisible(item: NavItem) {
     if (!item.module) return true
     const key = `module_${item.module}` as keyof typeof config
     return config[key] !== false
-  })
+  }
+
+  function isActive(href: string) {
+    return pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
+  }
+
+  const initial = companyName?.[0]?.toUpperCase() ?? 'V'
 
   return (
     <aside
       className={collapsed ? 'w-[60px]' : 'w-[220px]'}
       style={{
         height: '100%',
-        background: 'var(--vb-bg-sidebar)',
-        borderRight: '1px solid var(--vb-border)',
+        background: S.bg,
+        borderRight: `1px solid ${S.border}`,
         display: 'flex',
         flexDirection: 'column',
         transition: 'width 180ms ease',
         flexShrink: 0,
       }}
     >
-      {/* Logo */}
+      {/* Logo row */}
       <div
-        className="h-14 flex items-center justify-between px-4 flex-shrink-0"
-        style={{ borderBottom: '1px solid var(--vb-border)' }}
+        className="h-14 flex items-center justify-between px-3.5 flex-shrink-0"
+        style={{ borderBottom: `1px solid ${S.border}` }}
       >
-        {collapsed
-          ? (
-            <span className="font-bold text-base mx-auto tracking-tight" style={{ color: 'var(--vb-accent)' }}>V</span>
-          ) : (
-            <span className="font-semibold text-base tracking-tight" style={{ color: 'var(--vb-text)' }}>
-              Vis<span style={{ color: 'var(--vb-accent)' }}>Bot</span>
-            </span>
-          )
-        }
+        {collapsed ? (
+          <span className="font-bold text-base mx-auto" style={{ color: S.logoGreen }}>V</span>
+        ) : (
+          <span className="font-semibold text-[15px] tracking-tight" style={{ color: S.logo }}>
+            Vis<span style={{ color: S.logoGreen }}>Bot</span>
+          </span>
+        )}
         {onMobileClose && (
           <button
             onClick={onMobileClose}
-            className="lg:hidden flex items-center justify-center w-7 h-7 rounded-md transition-colors"
-            style={{ color: 'var(--vb-text-3)' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--vb-bg-hover)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+            className="lg:hidden flex items-center justify-center w-7 h-7 rounded-md"
+            style={{ color: S.text }}
+            onMouseEnter={e => { e.currentTarget.style.background = S.hoverBg }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
           >
             <X size={15} />
           </button>
         )}
       </div>
 
-      {/* Nav items */}
-      <nav className="flex-1 px-2 py-3 space-y-px overflow-y-auto">
-        {visibleNav.map(({ href, icon: Icon, label }) => {
-          const active = pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
+      {/* Nav sections */}
+      <nav className="flex-1 px-2 py-3 overflow-y-auto space-y-4">
+        {SECTIONS.map(section => {
+          const visible = section.items.filter(isVisible)
+          if (visible.length === 0) return null
           return (
-            <Link
-              key={href}
-              href={href}
-              title={collapsed ? label : undefined}
-              onClick={onMobileClose}
-              className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors"
-              style={
-                active
-                  ? { background: 'var(--vb-bg-active)', color: 'var(--vb-text)', fontWeight: 500 }
-                  : { color: 'var(--vb-text-2)' }
-              }
-              onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--vb-bg-hover)'; }}
-              onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}
-            >
-              <Icon size={15} className="flex-shrink-0" />
-              {!collapsed && <span className="truncate">{label}</span>}
-            </Link>
+            <div key={section.label}>
+              {!collapsed && (
+                <p
+                  className="px-2.5 mb-1.5 text-[10px] font-semibold tracking-widest select-none"
+                  style={{ color: S.label }}
+                >
+                  {section.label}
+                </p>
+              )}
+              <div className="space-y-px">
+                {visible.map(item => {
+                  const active = isActive(item.href)
+                  const Icon = item.icon
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      title={collapsed ? item.label : undefined}
+                      onClick={onMobileClose}
+                      className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-[6px] text-[13px] transition-colors"
+                      style={
+                        active
+                          ? { background: S.activeBg, color: S.textActive, fontWeight: 500 }
+                          : { color: S.text }
+                      }
+                      onMouseEnter={e => { if (!active) e.currentTarget.style.background = S.hoverBg }}
+                      onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
+                    >
+                      <Icon size={14} />
+                      {!collapsed && <span className="truncate">{item.label}</span>}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
           )
         })}
       </nav>
 
-      {/* Collapse toggle (desktop only) */}
+      {/* Workspace badge */}
+      {collapsed ? (
+        <div className="flex justify-center mb-2">
+          <div
+            className="w-6 h-6 rounded-[4px] flex items-center justify-center text-[11px] font-bold"
+            style={{ background: S.logoGreen, color: '#fff' }}
+          >
+            {initial}
+          </div>
+        </div>
+      ) : (
+        <div
+          className="mx-2 mb-2 px-3 py-2 rounded-[6px] flex items-center gap-2.5"
+          style={{ background: S.badgeBg, border: `1px solid ${S.border}` }}
+        >
+          <div
+            className="w-6 h-6 rounded-[4px] flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+            style={{ background: S.logoGreen, color: '#fff' }}
+          >
+            {initial}
+          </div>
+          <div className="min-w-0">
+            <p className="text-[12px] font-medium leading-tight truncate" style={{ color: S.logo }}>
+              {companyName || '…'}
+            </p>
+            <p className="text-[10px] leading-tight" style={{ color: S.label }}>Workspace</p>
+          </div>
+        </div>
+      )}
+
+      {/* Collapse toggle — desktop only */}
       <button
         onClick={onToggle}
-        className="hidden lg:flex h-10 items-center justify-center transition-colors flex-shrink-0"
-        style={{ borderTop: '1px solid var(--vb-border)', color: 'var(--vb-text-3)' }}
-        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        onMouseEnter={e => { e.currentTarget.style.background = 'var(--vb-bg-hover)'; e.currentTarget.style.color = 'var(--vb-text-2)'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--vb-text-3)'; }}
+        className="hidden lg:flex h-10 items-center justify-center flex-shrink-0"
+        style={{ borderTop: `1px solid ${S.border}`, color: S.label }}
+        title={collapsed ? 'Expand' : 'Collapse'}
+        onMouseEnter={e => { e.currentTarget.style.background = S.hoverBg; (e.currentTarget as HTMLElement).style.color = S.text }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = S.label }}
       >
-        {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        {collapsed ? <ChevronRight size={13} /> : <ChevronLeft size={13} />}
       </button>
     </aside>
   )

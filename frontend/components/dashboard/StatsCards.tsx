@@ -8,10 +8,10 @@ interface Stats {
 
 function Skeleton() {
   return (
-    <div className="rounded-lg p-5 animate-pulse" style={{ border: '1px solid var(--vb-border)', background: 'var(--vb-bg-card)' }}>
-      <div className="h-3 w-28 rounded mb-4" style={{ background: 'var(--vb-bg-hover)' }} />
-      <div className="h-8 w-16 rounded mb-2" style={{ background: 'var(--vb-bg-hover)' }} />
-      <div className="h-3 w-20 rounded"     style={{ background: 'var(--vb-bg-hover)' }} />
+    <div className="animate-pulse" style={{ background: '#FFFFFF', border: '1px solid #EAEAEA', borderRadius: '12px', padding: '20px' }}>
+      <div className="h-2 w-20 rounded mb-4" style={{ background: '#F5F5F5' }} />
+      <div className="h-10 w-14 rounded mb-2" style={{ background: '#F5F5F5' }} />
+      <div className="h-2.5 w-24 rounded" style={{ background: '#F5F5F5' }} />
     </div>
   )
 }
@@ -20,24 +20,43 @@ interface StatCardProps {
   label: string
   value: number | string
   sub?: string
-  trend?: { value: string; up?: boolean }
+  live?: boolean
 }
 
-function StatCard({ label, value, sub, trend }: StatCardProps) {
+function StatCard({ label, value, sub, live }: StatCardProps) {
   return (
-    <div className="rounded-lg p-5" style={{ border: '1px solid var(--vb-border)', background: 'var(--vb-bg-card)' }}>
-      <p className="text-xs font-medium mb-2" style={{ color: 'var(--vb-text-3)' }}>{label}</p>
-      <div className="flex items-baseline gap-2">
-        <p className="text-3xl font-semibold tracking-tight" style={{ color: 'var(--vb-text)' }}>
-          {value}
-        </p>
-        {trend && (
-          <span className={`text-xs font-medium ${trend.up ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
-            {trend.value}
-          </span>
-        )}
-      </div>
-      {sub && <p className="mt-1 text-xs" style={{ color: 'var(--vb-text-3)' }}>{sub}</p>}
+    <div
+      className="transition-all"
+      style={{ background: '#FFFFFF', border: '1px solid #EAEAEA', borderRadius: '12px', padding: '20px' }}
+      onMouseEnter={e => {
+        e.currentTarget.style.borderColor = '#D1D5DB'
+        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)'
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.borderColor = '#EAEAEA'
+        e.currentTarget.style.boxShadow = 'none'
+      }}
+    >
+      <p
+        className="text-[10px] font-semibold tracking-widest uppercase mb-3"
+        style={{ color: '#9CA3AF' }}
+      >
+        {label}
+      </p>
+      <p className="text-4xl font-bold tracking-tight mb-2" style={{ color: '#0A0A0A' }}>
+        {value}
+      </p>
+      {sub && (
+        <div className="flex items-center gap-1.5">
+          {live && (
+            <span
+              className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+              style={{ background: '#10B981', animation: 'pulse 2s cubic-bezier(0.4,0,0.6,1) infinite' }}
+            />
+          )}
+          <span className="text-xs" style={{ color: '#9CA3AF' }}>{sub}</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -75,36 +94,16 @@ export function StatsCards() {
 
   return (
     <div className="space-y-3">
-      {/* Visitor stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard
-          label="Today's visitors"
-          value={stats?.total ?? 0}
-          sub="since midnight"
-        />
-        <StatCard
-          label="Currently inside"
-          value={inside}
-          sub={inside === 1 ? 'active check-in' : 'active check-ins'}
-          trend={inside > 0 ? { value: 'live', up: true } : undefined}
-        />
-        <StatCard
-          label="Materials out"
-          value={stats?.materials ?? 0}
-          sub="pending return"
-        />
-        <StatCard
-          label="Returning visitors"
-          value={stats?.returning ?? 0}
-          sub="OTP auto-filled"
-        />
+        <StatCard label="Today's Visitors" value={stats?.total ?? 0}    sub="since midnight"                                          />
+        <StatCard label="Currently Inside" value={inside}               sub={inside > 0 ? 'active check-ins' : 'all checked out'} live={inside > 0} />
+        <StatCard label="Materials Out"    value={stats?.materials ?? 0} sub="pending return"                                        />
+        <StatCard label="Returning"        value={stats?.returning ?? 0} sub="OTP auto-filled"                                      />
       </div>
-
-      {/* Vehicle stats */}
       <div className="grid grid-cols-1 phone-lg:grid-cols-3 gap-3">
-        <StatCard label="Inward today"    value={stats?.inwardToday    ?? 0} sub="vehicles entered" />
-        <StatCard label="Outward today"   value={stats?.outwardToday   ?? 0} sub="vehicles exited"  />
-        <StatCard label="Vehicles inside" value={stats?.vehiclesInside ?? 0} sub="gate passes open" />
+        <StatCard label="Inward Today"    value={stats?.inwardToday    ?? 0} sub="vehicles entered" />
+        <StatCard label="Outward Today"   value={stats?.outwardToday   ?? 0} sub="vehicles exited"  />
+        <StatCard label="Vehicles Inside" value={stats?.vehiclesInside ?? 0} sub="gate passes open" />
       </div>
     </div>
   )
