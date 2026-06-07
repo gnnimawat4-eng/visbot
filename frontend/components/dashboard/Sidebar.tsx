@@ -26,7 +26,7 @@ const S = {
 
 interface NavItem {
   href: string
-  icon: React.ComponentType<{ size?: number; className?: string }>
+  icon: React.ComponentType<{ size?: string | number; className?: string }>
   label: string
   module?: string
 }
