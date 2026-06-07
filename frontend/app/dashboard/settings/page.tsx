@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { ArrowRight, Save, Upload, Building2, Zap, Palette, Tag, BarChart2 } from 'lucide-react'
+import { ArrowRight, Save, Upload, Building2, Zap, Palette, Tag, BarChart2, Stamp } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher'
@@ -218,8 +218,9 @@ export default function SettingsPage() {
           </div>
           <div className="space-y-2">
             {[
-              { href: '/dashboard/settings/categories', icon: Tag, label: 'Material Categories', desc: 'Manage categories, approval rules, and photo requirements' },
-              { href: '/dashboard/settings/reports', icon: BarChart2, label: 'Daily Reports', desc: 'Configure scheduled digest recipients and content' },
+              { href: '/dashboard/settings/branding',   icon: Stamp,    label: 'Company Branding',   desc: 'Logo, address, GST, signature & stamp for gate pass PDFs' },
+              { href: '/dashboard/settings/categories', icon: Tag,      label: 'Material Categories', desc: 'Manage categories, approval rules, and photo requirements' },
+              { href: '/dashboard/settings/reports',    icon: BarChart2, label: 'Daily Reports',       desc: 'Configure scheduled digest recipients and content' },
             ].map(({ href, icon: Icon, label, desc }) => (
               <Link key={href} href={href}
                 className="flex items-center justify-between p-4 rounded-xl border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">

@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { resolveCompanyId } from '@/lib/resolveCompanyId'
 
 export async function GET() {
-  const CID     = await resolveCompanyId()
+  const CID      = await resolveCompanyId()
   const supabase = createAdminClient()
   let q = supabase.from('companies').select('*')
   if (CID) q = q.eq('id', CID)
@@ -13,20 +13,37 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  const body = await req.json()
+  const body     = await req.json()
   const supabase = createAdminClient()
+
+  // Allow updating all branding fields
+  const allowed = [
+    'name', 'logo_url',
+    'legal_name', 'address_line1', 'address_line2', 'city', 'state', 'pincode',
+    'gst_number', 'cin_number', 'phone', 'email', 'website',
+    'authorized_signatory_name', 'authorized_signatory_designation',
+    'signature_url', 'stamp_url', 'footer_text',
+  ] as const
+
+  const update: Record<string, unknown> = {}
+  for (const key of allowed) {
+    if (key in body) update[key] = body[key] || null
+  }
+
   const { data, error } = await supabase
     .from('companies')
-    .update({ name: body.name, logo_url: body.logo_url })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    .update(update as any)
     .eq('id', body.id)
     .select()
     .single()
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json()
+  const body     = await req.json()
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('companies')
