@@ -186,7 +186,7 @@ export default function GatePassesPage() {
                   <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">{p.party_name}</p>
                   <div className="flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
                     <span>{p.items?.length ?? 0} items{p.total_weight ? ` · ${p.total_weight} ${p.weight_unit}` : ''}</span>
-                    <Link href={`/guard/gate-pass/${p.id}`} target="_blank" className="hover:underline flex items-center gap-1" style={{ color: 'var(--vb-accent)' }}>
+                    <Link href={`/dashboard/gate-passes/${p.id}`} className="hover:underline flex items-center gap-1" style={{ color: 'var(--vb-accent)' }}>
                       View <ExternalLink size={10} />
                     </Link>
                   </div>
@@ -243,7 +243,7 @@ export default function GatePassesPage() {
                     {format(new Date(p.checked_in_at), 'dd MMM HH:mm')}
                   </td>
                   <td className="px-4 py-3">
-                    <Link href={`/guard/gate-pass/${p.id}`} target="_blank"
+                    <Link href={`/dashboard/gate-passes/${p.id}`}
                       className="inline-flex items-center gap-0.5 text-xs" style={{ color: 'var(--vb-accent)' }}>
                       View <ExternalLink size={11} />
                     </Link>
