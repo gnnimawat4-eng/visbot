@@ -10,18 +10,19 @@ import {
 } from 'lucide-react'
 import { useConfig } from '@/lib/config'
 
-// Sidebar is always dark — hardcoded colors, no CSS vars
+// Light sidebar constants
 const S = {
-  bg:         '#0A0A0A',
-  border:     'rgba(255,255,255,0.07)',
-  text:       '#A1A1AA',
-  textActive: '#FFFFFF',
-  activeBg:   '#1C1C1F',
-  hoverBg:    'rgba(255,255,255,0.04)',
-  logo:       '#FFFFFF',
+  bg:         '#FFFFFF',
+  border:     '#EAEAEA',
+  text:       '#52525B',
+  textActive: '#0A0A0A',
+  activeBg:   '#F4F4F5',
+  hoverBg:    '#F4F4F5',
+  logo:       '#0A0A0A',
   logoGreen:  '#10B981',
-  label:      'rgba(255,255,255,0.22)',
-  badgeBg:    '#111111',
+  label:      '#71717A',
+  badgeBg:    '#FFFFFF',
+  collapseText: '#A1A1AA',
 } as const
 
 interface NavItem {
@@ -120,7 +121,7 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
     >
       {/* Logo row */}
       <div
-        className="h-14 flex items-center justify-between px-3.5 flex-shrink-0"
+        className="h-14 flex items-center justify-between px-4 flex-shrink-0"
         style={{ borderBottom: `1px solid ${S.border}` }}
       >
         {collapsed ? (
@@ -133,8 +134,8 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
         {onMobileClose && (
           <button
             onClick={onMobileClose}
-            className="lg:hidden flex items-center justify-center w-7 h-7 rounded-md"
-            style={{ color: S.text }}
+            className="lg:hidden flex items-center justify-center w-7 h-7 rounded-lg transition-colors"
+            style={{ color: S.label }}
             onMouseEnter={e => { e.currentTarget.style.background = S.hoverBg }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
           >
@@ -152,7 +153,7 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
             <div key={section.label}>
               {!collapsed && (
                 <p
-                  className="px-2.5 mb-1.5 text-[10px] font-semibold tracking-widest select-none"
+                  className="px-2 mb-1 text-xs font-medium tracking-wider uppercase select-none"
                   style={{ color: S.label }}
                 >
                   {section.label}
@@ -168,7 +169,7 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
                       href={item.href}
                       title={collapsed ? item.label : undefined}
                       onClick={onMobileClose}
-                      className="flex items-center gap-2.5 px-2.5 py-[7px] rounded-[6px] text-[13px] transition-colors"
+                      className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-[13px] transition-colors"
                       style={
                         active
                           ? { background: S.activeBg, color: S.textActive, fontWeight: 500 }
@@ -177,7 +178,7 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
                       onMouseEnter={e => { if (!active) e.currentTarget.style.background = S.hoverBg }}
                       onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
                     >
-                      <Icon size={14} />
+                      <Icon size={16} />
                       {!collapsed && <span className="truncate">{item.label}</span>}
                     </Link>
                   )
@@ -192,7 +193,7 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
       {collapsed ? (
         <div className="flex justify-center mb-2">
           <div
-            className="w-6 h-6 rounded-[4px] flex items-center justify-center text-[11px] font-bold"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold"
             style={{ background: S.logoGreen, color: '#fff' }}
           >
             {initial}
@@ -200,20 +201,20 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
         </div>
       ) : (
         <div
-          className="mx-2 mb-2 px-3 py-2 rounded-[6px] flex items-center gap-2.5"
+          className="mx-2 mb-2 px-3 py-2.5 rounded-lg flex items-center gap-2.5"
           style={{ background: S.badgeBg, border: `1px solid ${S.border}` }}
         >
           <div
-            className="w-6 h-6 rounded-[4px] flex items-center justify-center text-[11px] font-bold flex-shrink-0"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
             style={{ background: S.logoGreen, color: '#fff' }}
           >
             {initial}
           </div>
           <div className="min-w-0">
-            <p className="text-[12px] font-medium leading-tight truncate" style={{ color: S.logo }}>
+            <p className="text-[13px] font-medium leading-tight truncate" style={{ color: S.logo }}>
               {companyName || '…'}
             </p>
-            <p className="text-[10px] leading-tight" style={{ color: S.label }}>Workspace</p>
+            <p className="text-[11px] leading-tight mt-0.5" style={{ color: S.label }}>Workspace</p>
           </div>
         </div>
       )}
@@ -221,11 +222,11 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
       {/* Collapse toggle — desktop only */}
       <button
         onClick={onToggle}
-        className="hidden lg:flex h-10 items-center justify-center flex-shrink-0"
-        style={{ borderTop: `1px solid ${S.border}`, color: S.label }}
+        className="hidden lg:flex h-10 items-center justify-center flex-shrink-0 transition-colors"
+        style={{ borderTop: `1px solid ${S.border}`, color: S.collapseText }}
         title={collapsed ? 'Expand' : 'Collapse'}
-        onMouseEnter={e => { e.currentTarget.style.background = S.hoverBg; (e.currentTarget as HTMLElement).style.color = S.text }}
-        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = S.label }}
+        onMouseEnter={e => { e.currentTarget.style.background = S.hoverBg; e.currentTarget.style.color = S.label }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = S.collapseText }}
       >
         {collapsed ? <ChevronRight size={13} /> : <ChevronLeft size={13} />}
       </button>
