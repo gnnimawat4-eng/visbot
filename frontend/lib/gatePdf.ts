@@ -60,7 +60,7 @@ export async function generateGatePassPDF(
   doc.setFontSize(70)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(240, 240, 240)
-  doc.text((b.legal_name || b.name).toUpperCase(), W / 2, H / 2, { align: 'center', angle: 45 })
+  doc.text((b.legal_name || b.name).toUpperCase(), W / 2, H / 2, { align: 'center', angle: 330 })
 
   // ── Branded header ─────────────────────────────────────────
   let y = await addBrandedHeader(doc, b)

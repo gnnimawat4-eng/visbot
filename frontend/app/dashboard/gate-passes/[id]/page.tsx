@@ -53,8 +53,25 @@ const PRINT_CSS = `
     .scr-only  { display: none !important; }
     .prn-only  { display: block !important; }
     .prn-avoid { page-break-inside: avoid; }
+    .prn-wm {
+      display: block;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 100px;
+      font-weight: 900;
+      color: #000;
+      opacity: 0.05;
+      white-space: nowrap;
+      z-index: 0;
+      pointer-events: none;
+      text-transform: uppercase;
+      font-family: Arial, Helvetica, sans-serif;
+    }
   }
   .prn-only { display: none; }
+  .prn-wm   { display: none; }
 `
 
 function Row({ label, value }: { label: string; value?: string | null }) {
@@ -312,9 +329,15 @@ export default function GatePassDetailPage() {
       </div>
 
       {/* ══════════ Print-only A4 layout ═════════════════════════════ */}
+
+      {/* Watermark — centered, diagonal, visible only during print */}
+      <div className="prn-wm">
+        {(branding?.legal_name || branding?.name || gp.company?.name || 'VisBot').toUpperCase()}
+      </div>
+
       <div
         className="prn-only"
-        style={{ fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '11pt', color: '#111', lineHeight: 1.45 }}
+        style={{ fontFamily: 'Arial, Helvetica, sans-serif', fontSize: '11pt', color: '#111', lineHeight: 1.45, position: 'relative', zIndex: 1 }}
       >
         {/* Company header */}
         <div className="prn-avoid" style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', paddingBottom: '12px', borderBottom: '1.5px solid #222', marginBottom: '14px' }}>
@@ -356,19 +379,9 @@ export default function GatePassDetailPage() {
           <p style={{ fontSize: '10pt', margin: '4px 0 0', color: '#555', fontFamily: 'Courier New, monospace' }}>
             {gp.pass_number}
           </p>
-          <div style={{ marginTop: '8px' }}>
-            <span style={{
-              display: 'inline-block',
-              padding: '2px 14px',
-              border: `1.5px solid ${isInward ? '#059669' : '#D97706'}`,
-              borderRadius: '20px',
-              fontSize: '10pt',
-              fontWeight: 'bold',
-              color: isInward ? '#059669' : '#D97706',
-            }}>
-              {gp.pass_type.toUpperCase()}
-            </span>
-          </div>
+          <p style={{ margin: '8px 0 0', fontWeight: 'bold', fontSize: '11pt', color: '#000', textTransform: 'uppercase' }}>
+            Direction: {gp.pass_type.toUpperCase()}
+          </p>
         </div>
 
         {/* Date / PO row */}
@@ -396,31 +409,31 @@ export default function GatePassDetailPage() {
           <p style={{ fontWeight: 'bold', fontSize: '9.5pt', textTransform: 'uppercase', letterSpacing: '0.5px', margin: '0 0 6px', color: '#333' }}>
             Items
           </p>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10pt' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10pt', border: '1px solid #000' }}>
             <thead>
-              <tr style={{ background: '#1E1E1E', color: '#FFF' }}>
-                <th style={{ padding: '6px 8px', textAlign: 'left', fontWeight: 'bold' }}>Item</th>
-                <th style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 'bold', width: '55px' }}>Qty</th>
-                <th style={{ padding: '6px 8px', textAlign: 'left', fontWeight: 'bold', width: '55px' }}>Unit</th>
-                <th style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 'bold', width: '75px' }}>Weight</th>
+              <tr style={{ background: '#000', color: '#FFF' }}>
+                <th style={{ padding: '8px', textAlign: 'left', fontWeight: 'bold', border: '1px solid #000' }}>Item</th>
+                <th style={{ padding: '8px', textAlign: 'left', fontWeight: 'bold', border: '1px solid #000', width: '55px' }}>Qty</th>
+                <th style={{ padding: '8px', textAlign: 'left', fontWeight: 'bold', border: '1px solid #000', width: '55px' }}>Unit</th>
+                <th style={{ padding: '8px', textAlign: 'left', fontWeight: 'bold', border: '1px solid #000', width: '90px' }}>Weight / Remarks</th>
               </tr>
             </thead>
             <tbody>
               {(gp.items ?? []).map((item, i) => (
-                <tr key={i} style={{ background: i % 2 === 0 ? '#FAFAFA' : '#FFF' }}>
-                  <td style={{ padding: '5px 8px', borderBottom: '1px solid #EEE' }}>{item.name}</td>
-                  <td style={{ padding: '5px 8px', textAlign: 'right', borderBottom: '1px solid #EEE' }}>{item.quantity}</td>
-                  <td style={{ padding: '5px 8px', borderBottom: '1px solid #EEE' }}>{item.unit}</td>
-                  <td style={{ padding: '5px 8px', textAlign: 'right', borderBottom: '1px solid #EEE' }}>
+                <tr key={i} style={{ background: '#FFF' }}>
+                  <td style={{ padding: '8px', border: '1px solid #000' }}>{item.name}</td>
+                  <td style={{ padding: '8px', border: '1px solid #000' }}>{item.quantity}</td>
+                  <td style={{ padding: '8px', border: '1px solid #000' }}>{item.unit}</td>
+                  <td style={{ padding: '8px', border: '1px solid #000' }}>
                     {item.weight != null ? `${item.weight} ${gp.weight_unit}` : '—'}
                   </td>
                 </tr>
               ))}
               {gp.total_weight != null && (
                 <tr style={{ background: '#F0F0F0', fontWeight: 'bold' }}>
-                  <td colSpan={2} style={{ padding: '5px 8px' }} />
-                  <td style={{ padding: '5px 8px' }}>Total</td>
-                  <td style={{ padding: '5px 8px', textAlign: 'right' }}>{gp.total_weight} {gp.weight_unit}</td>
+                  <td colSpan={2} style={{ padding: '8px', border: '1px solid #000' }} />
+                  <td style={{ padding: '8px', border: '1px solid #000' }}>Total</td>
+                  <td style={{ padding: '8px', border: '1px solid #000' }}>{gp.total_weight} {gp.weight_unit}</td>
                 </tr>
               )}
             </tbody>
