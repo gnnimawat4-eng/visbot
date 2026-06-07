@@ -1,0 +1,122 @@
+# VISBOT — Visitor Management SaaS
+
+> ⚠️ This is VISBOT. Not WaBot. Not any other project.
+> Always work inside this folder only.
+
+## Project Structure
+```
+visbot/
+├── frontend/   → Next.js 14 App Router  (Vercel)   port 3000
+├── backend/    → Node.js + Express       (Railway)  port 4000
+├── supabase/   → Migrations + RLS schema
+└── src/        → Shared TypeScript types
+```
+
+## Stack
+| Layer    | Tech                                      |
+|----------|-------------------------------------------|
+| Frontend | Next.js 14, Tailwind, Supabase SSR        |
+| Backend  | Express, Bull queue, JWT, ioredis         |
+| Database | Supabase (PostgreSQL + Realtime + Auth)   |
+| Cache    | Redis (Railway)                           |
+| SMS/OTP  | Fast2SMS (India) / Twilio                 |
+| Media    | Cloudinary or Supabase Storage            |
+| Deploy   | Vercel (frontend) + Railway (backend)     |
+
+## Key Features
+1. **Visitor check-in** — form → webcam photo → OTP verify → DB insert
+2. **Returning visitor** — phone lookup → OTP auto-send → fast check-in
+3. **Material in/out** — log items with direction, return alerts via Bull queue
+4. **Live dashboard** — Supabase Realtime websocket feed
+5. **Multi-tenant SaaS** — subdomain routing, Row-Level Security per company
+
+## Dev Commands
+```bash
+# Frontend
+cd frontend && npm install && npm run dev      # http://localhost:3000
+
+# Backend
+cd backend && npm install && npm run dev       # http://localhost:4000
+
+# Supabase migrations
+npx supabase db push
+
+# Typecheck
+cd frontend && npm run typecheck
+cd backend  && npx tsc --noEmit
+```
+
+## Environment Setup
+```bash
+cp .env.local.example frontend/.env.local
+# Then fill in values — see required keys below
+```
+
+### Required .env.local keys
+```
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+NEXT_PUBLIC_API_URL=http://localhost:4000
+REDIS_URL
+FAST2SMS_API_KEY          # or TWILIO_* keys
+CLOUDINARY_CLOUD_NAME     # or set STORAGE_PROVIDER=supabase
+NEXTAUTH_SECRET
+OTP_EXPIRY_SECONDS=300
+```
+
+## Important Files
+| File | Purpose |
+|------|---------|
+| `frontend/middleware.ts` | Tenant detection from subdomain |
+| `frontend/lib/otp.ts` | OTP generate → Redis store → SMS send |
+| `frontend/lib/storage.ts` | Photo upload to Cloudinary/Supabase |
+| `frontend/hooks/useRealtimeFeed.ts` | Supabase Realtime websocket |
+| `frontend/hooks/useCheckInFlow.ts` | Kiosk step state machine |
+| `frontend/components/kiosk/` | CheckInForm, PhotoCapture, OtpVerify |
+| `frontend/components/dashboard/` | LiveFeed, StatsCards, MaterialTracker |
+| `backend/src/index.ts` | Express server entry point |
+| `backend/src/routes/` | checkin, visitor, material, stats |
+| `backend/src/controllers/` | Business logic per route |
+| `backend/src/jobs/otpCleanup.ts` | Bull queue for alerts |
+| `supabase/migrations/001_initial_schema.sql` | Full DB schema with RLS |
+| `src/types/database.ts` | Shared TypeScript types |
+
+## Database Tables
+- `companies` — tenants (slug = subdomain)
+- `visitors` — global, deduplicated by phone number
+- `checkins` — per-visit records with photo, host, status
+- `materials` — in/out tracking with return flag
+
+## API Endpoints (backend port 4000)
+```
+POST /api/checkin          Create check-in
+PATCH /api/checkin/:id/out Check-out visitor
+GET  /api/checkin/today    Today's list
+GET  /api/visitor          List visitors
+GET  /api/visitor/search   Search by name/phone
+POST /api/material         Log material
+GET  /api/material/active  Pending returns
+GET  /api/stats/summary    Dashboard numbers
+```
+
+## Next.js API Routes (frontend port 3000)
+```
+POST /api/otp/send         Detect returning visitor + send OTP
+POST /api/otp/verify       Verify OTP from Redis
+POST /api/checkin          Final check-in submit
+POST /api/upload/photo     Webcam photo → Cloudinary/Storage
+POST /api/material/log     Log material entry
+```
+
+## Multi-tenant Flow
+1. User hits `techcorp.visbot.in`
+2. `middleware.ts` extracts slug `techcorp`
+3. Sets `x-company-slug` header
+4. Supabase RLS filters all data by `company_id`
+5. Each company sees only their visitors/check-ins
+
+## Deployment
+- **Vercel**: push `frontend/` — auto deploys on git push
+- **Railway**: push `backend/` — uses `railway.json` config
+- **Supabase**: run `npx supabase db push` after schema changes

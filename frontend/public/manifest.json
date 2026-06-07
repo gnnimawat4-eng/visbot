@@ -1,0 +1,35 @@
+{
+  "name": "VisBot - Visitor Management",
+  "short_name": "VisBot",
+  "description": "Smart visitor & material management",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F1117",
+  "theme_color": "#1D9E75",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "Quick Entry",      "url": "/guard/entry",    "description": "Check in a visitor" },
+    { "name": "Active Visitors",  "url": "/guard/exit",     "description": "Check out visitors" },
+    { "name": "Scan QR",          "url": "/guard/scan",     "description": "Scan pre-approved QR" }
+  ],
+  "categories": ["productivity", "business"],
+  "lang": "en"
+}

@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ── Light mode ─────────────────────────────────────────────────────────── */
+  :root {
+    /* Tailwind shadcn-compat tokens */
+    --background:        0 0% 100%;
+    --foreground:        240 6% 4%;
+    --card:              0 0% 100%;
+    --card-foreground:   240 6% 4%;
+    --popover:           0 0% 100%;
+    --popover-foreground:240 6% 4%;
+    --primary:           240 6% 10%;
+    --primary-foreground:0 0% 98%;
+    --secondary:         240 5% 96%;
+    --secondary-foreground:240 6% 10%;
+    --muted:             240 5% 96%;
+    --muted-foreground:  240 4% 46%;
+    --accent:            240 5% 96%;
+    --accent-foreground: 240 6% 10%;
+    --destructive:       0 84% 60%;
+    --destructive-foreground:0 0% 98%;
+    --border:            240 6% 90%;
+    --input:             240 6% 90%;
+    --ring:              240 6% 10%;
+    --radius:            0.375rem;     /* 6px — tighter than old 8px */
+
+    /* ── VisBot semantic tokens — light ──────────────────────────────────── */
+    --vb-bg:             #FFFFFF;
+    --vb-bg-sidebar:     #FAFAFA;      /* slightly off-white sidebar */
+    --vb-bg-card:        #FFFFFF;
+    --vb-bg-hover:       #F4F4F5;      /* zinc-100 */
+    --vb-bg-active:      #F4F4F5;      /* neutral, not brand-tinted */
+    --vb-input:          #FFFFFF;
+    --vb-input-border:   #D4D4D8;      /* zinc-300 */
+    --vb-text:           #09090B;      /* zinc-950 */
+    --vb-text-2:         #52525B;      /* zinc-600 */
+    --vb-text-3:         #A1A1AA;      /* zinc-400 */
+    --vb-border:         #E4E4E7;      /* zinc-200 */
+    --vb-border-2:       #F4F4F5;      /* zinc-100 */
+    /* Brand: used ONLY for logo + primary CTA buttons */
+    --vb-accent:         #16A34A;      /* green-600 — not neon */
+    --vb-accent-hover:   #15803D;      /* green-700 */
+    --vb-accent-ring:    rgba(22,163,74,0.25);
+    --vb-accent-text:    #FFFFFF;
+  }
+
+  /* ── Dark mode ──────────────────────────────────────────────────────────── */
+  .dark {
+    --background:        240 6% 4%;
+    --foreground:        0 0% 98%;
+    --card:              240 6% 4%;
+    --card-foreground:   0 0% 98%;
+    --popover:           240 6% 7%;
+    --popover-foreground:0 0% 98%;
+    --primary:           0 0% 98%;
+    --primary-foreground:240 6% 10%;
+    --secondary:         240 4% 16%;
+    --secondary-foreground:0 0% 98%;
+    --muted:             240 4% 10%;
+    --muted-foreground:  240 5% 65%;
+    --accent:            240 4% 16%;
+    --accent-foreground: 0 0% 98%;
+    --destructive:       0 63% 31%;
+    --destructive-foreground:0 0% 98%;
+    --border:            240 4% 16%;
+    --input:             240 4% 14%;
+    --ring:              0 0% 98%;
+
+    /* ── VisBot semantic tokens — dark ───────────────────────────────────── */
+    --vb-bg:             #09090B;      /* zinc-950 — NOT dark blue */
+    --vb-bg-sidebar:     #09090B;      /* same bg — no contrasting sidebar */
+    --vb-bg-card:        #18181B;      /* zinc-900 */
+    --vb-bg-hover:       #27272A;      /* zinc-800 */
+    --vb-bg-active:      #27272A;      /* neutral active, not brand-tinted */
+    --vb-input:          #18181B;
+    --vb-input-border:   #3F3F46;      /* zinc-700 */
+    --vb-text:           #FAFAFA;      /* zinc-50 */
+    --vb-text-2:         #A1A1AA;      /* zinc-400 */
+    --vb-text-3:         #52525B;      /* zinc-600 */
+    --vb-border:         #27272A;      /* zinc-800 */
+    --vb-border-2:       #18181B;      /* zinc-900 */
+    --vb-accent:         #22C55E;      /* green-500 — brighter for dark bg */
+    --vb-accent-hover:   #16A34A;
+    --vb-accent-ring:    rgba(34,197,94,0.2);
+    --vb-accent-text:    #FFFFFF;
+  }
+
+  /* Global reset */
+  *, *::before, *::after {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: var(--vb-bg);
+    color: var(--vb-text);
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.01em;
+  }
+
+  h1, h2, h3, h4 {
+    letter-spacing: -0.02em;
+  }
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar          { width: 4px; height: 4px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: var(--vb-border); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--vb-text-3); }
+
+/* ── Safe-area / PWA ────────────────────────────────────────────────────── */
+:root {
+  --bottom-nav-h: 56px;
+}
+
+/* Prevent iOS zoom on inputs */
+@media (max-width: 767px) {
+  input, select, textarea { font-size: 16px; }
+  * { -webkit-tap-highlight-color: transparent; }
+}
+
+/* Content offset for mobile bottom nav */
+.content-below-nav {
+  padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px) + 16px);
+}
+
+/* ── Common component patterns ──────────────────────────────────────────── */
+
+/* Primary button — black/white, not brand green */
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md
+         text-sm font-medium transition-opacity duration-150 disabled:opacity-50;
+  background: var(--vb-text);
+  color: var(--vb-bg);
+}
+.btn-primary:hover { opacity: 0.85; }
+
+/* Secondary button */
+.btn-secondary {
+  @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md
+         text-sm font-medium transition-colors duration-150 disabled:opacity-50;
+  border: 1px solid var(--vb-border);
+  color: var(--vb-text-2);
+}
+.btn-secondary:hover { background: var(--vb-bg-hover); color: var(--vb-text); }
+
+/* Standard input */
+.input-base {
+  @apply w-full h-9 px-3 rounded-md text-sm transition-shadow duration-150
+         disabled:opacity-50 disabled:cursor-not-allowed outline-none;
+  background: var(--vb-input);
+  border: 1px solid var(--vb-input-border);
+  color: var(--vb-text);
+}
+.input-base::placeholder { color: var(--vb-text-3); }
+.input-base:focus {
+  border-color: var(--vb-text);
+  box-shadow: 0 0 0 3px var(--vb-accent-ring);
+}
+
+/* Card */
+.card {
+  border-radius: var(--radius);
+  border: 1px solid var(--vb-border);
+  background: var(--vb-bg-card);
+}
