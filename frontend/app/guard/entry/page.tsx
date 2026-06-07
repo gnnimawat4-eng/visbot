@@ -200,7 +200,7 @@ export default function GuardEntryPage() {
   // clean up polling on unmount
   useEffect(() => () => stopPolling(), [stopPolling])
 
-  // ── Phone change → blacklist check → lookup → auto-send OTP ──
+  // ── Phone change → blacklist check → lookup → conditional auto-send OTP ──
   const handlePhone = useCallback((val: string) => {
     setPhone(val)
     setOtpSent(false); setOtp(''); setOtpCode('')
@@ -236,13 +236,16 @@ export default function GuardEntryPage() {
             setLastVisit(data.lastCheckin.created_at)
           }
           setReturning(true)
-          await sendOtpTo(val) // auto-send for returning visitors
+          // Auto-send OTP only if OTP is required AND not skipped for returning visitors
+          if (config.otp_required_on_entry && !config.otp_skip_for_returning) {
+            await sendOtpTo(val)
+          }
         } else {
           setReturning(false); setLastVisit(null)
         }
       } finally { setLooking(false) }
     }, 600)
-  }, [sendOtpTo])
+  }, [sendOtpTo, config.otp_required_on_entry, config.otp_skip_for_returning])
 
   // ── Host autocomplete ─────────────────────────────────────────────
   const searchHosts = useCallback((q: string) => {
@@ -265,10 +268,11 @@ export default function GuardEntryPage() {
 
   // ── Final check-in ────────────────────────────────────────────────
   const handleCheckIn = async (skipOtp = false) => {
+    const otpLen = config.otp_length || 6
     if (!name || !phone || !hostName) { toast.error(`Name, phone and ${config.label_host.toLowerCase()} are required`); return }
     if (!skipOtp) {
-      if (!otpSent)       { toast.error('Send OTP first'); return }
-      if (otp.length < 6) { toast.error('Enter the 6-digit OTP'); return }
+      if (!otpSent)              { toast.error('Send OTP first'); return }
+      if (otp.length < otpLen)   { toast.error(`Enter the ${otpLen}-digit OTP`); return }
     }
 
     setSubmitting(true)
@@ -493,7 +497,7 @@ export default function GuardEntryPage() {
                 )}
               </div>
 
-              <OtpBoxes value={otp} onChange={setOtp} />
+              <OtpBoxes value={otp} onChange={setOtp} length={config.otp_length || 6} />
 
               <div className="text-center">
                 {canResend ? (
@@ -625,7 +629,7 @@ export default function GuardEntryPage() {
               {sending ? <><Loader2 size={16} className="animate-spin" /> Sending OTP…</> : 'Send OTP →'}
             </button>
           ) : (
-            <button type="button" onClick={() => handleCheckIn(false)} disabled={submitting || otp.length < 6}
+            <button type="button" onClick={() => handleCheckIn(false)} disabled={submitting || otp.length < (config.otp_length || 6)}
               className="w-full py-3.5 bg-brand-500 text-white font-semibold rounded-xl hover:bg-brand-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
               {submitting ? <><Loader2 size={16} className="animate-spin" /> Checking in…</> : `${config.label_check_in} →`}
             </button>

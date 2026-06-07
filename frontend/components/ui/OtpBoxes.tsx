@@ -6,20 +6,21 @@ interface Props {
   onChange: (v: string) => void
   disabled?: boolean
   onComplete?: () => void
+  length?: number
 }
 
-export function OtpBoxes({ value, onChange, disabled, onComplete }: Props) {
+export function OtpBoxes({ value, onChange, disabled, onComplete, length = 6 }: Props) {
   const refs = useRef<(HTMLInputElement | null)[]>([])
-  const digits = Array.from({ length: 6 }, (_, i) => value[i] ?? '')
+  const digits = Array.from({ length }, (_, i) => value[i] ?? '')
   const focus = (i: number) => refs.current[i]?.focus()
 
   const handleChange = (i: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const d = e.target.value.replace(/\D/g, '').slice(-1)
     if (!d) return
-    const next = (value.slice(0, i) + d + value.slice(i + 1)).slice(0, 6)
+    const next = (value.slice(0, i) + d + value.slice(i + 1)).slice(0, length)
     onChange(next)
-    if (i < 5) focus(i + 1)
-    else if (next.length === 6) onComplete?.()
+    if (i < length - 1) focus(i + 1)
+    else if (next.length === length) onComplete?.()
   }
 
   const handleKeyDown = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -28,16 +29,16 @@ export function OtpBoxes({ value, onChange, disabled, onComplete }: Props) {
       if (digits[i]) onChange(value.slice(0, i) + value.slice(i + 1))
       else if (i > 0) { onChange(value.slice(0, i - 1) + value.slice(i)); focus(i - 1) }
     } else if (e.key === 'ArrowLeft' && i > 0) focus(i - 1)
-    else if (e.key === 'ArrowRight' && i < 5) focus(i + 1)
+    else if (e.key === 'ArrowRight' && i < length - 1) focus(i + 1)
   }
 
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault()
-    const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, length)
     if (!text) return
     onChange(text)
-    focus(Math.min(text.length, 5))
-    if (text.length === 6) onComplete?.()
+    focus(Math.min(text.length, length - 1))
+    if (text.length === length) onComplete?.()
   }
 
   return (

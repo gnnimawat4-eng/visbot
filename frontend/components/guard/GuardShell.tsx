@@ -11,6 +11,7 @@ import {
 import { createClient } from '@/lib/supabase/client'
 import { useCompanyBranding } from '@/hooks/useCompanyBranding'
 import { ConfigProvider } from '@/components/config/ConfigProvider'
+import { useConfig } from '@/lib/config'
 import { BottomNav } from '@/components/ui/BottomNav'
 
 // ── Light sidebar constants (matches admin Sidebar.tsx) ──────────────────────
@@ -29,33 +30,98 @@ const S = {
   iconMuted:    '#9CA3AF',
 } as const
 
-// ── Sidebar NAV (tablet + desktop) ──────────────────────────────────────────
+// ── Nav definitions (with optional module key) ───────────────────────────────
 
-const NAV = [
+interface NavItem {
+  href: string
+  icon: React.ComponentType<{ size?: number | string; className?: string }>
+  label: string
+  module?: string
+  exact?: boolean
+}
+
+const SIDEBAR_NAV: NavItem[] = [
   { href: '/guard',           icon: LayoutDashboard, label: 'Overview'      },
   { href: '/guard/entry',     icon: UserPlus,        label: 'Visitor Entry' },
   { href: '/guard/exit',      icon: UserMinus,       label: 'Visitor Exit'  },
-  { href: '/guard/material',  icon: Package,         label: 'Materials'     },
-  { href: '/guard/gate-pass', icon: Truck,           label: 'Gate Pass'     },
+  { href: '/guard/material',  icon: Package,         label: 'Materials',    module: 'materials'   },
+  { href: '/guard/gate-pass', icon: Truck,           label: 'Gate Pass',    module: 'gate_passes' },
   { href: '/guard/settings',  icon: Settings,        label: 'Settings'      },
 ]
 
-// ── Mobile bottom nav ────────────────────────────────────────────────────────
-
-const PRIMARY_NAV = [
+const PRIMARY_NAV: NavItem[] = [
   { href: '/guard',          exact: true, icon: LayoutDashboard, label: 'Home'     },
   { href: '/guard/entry',                 icon: UserPlus,        label: 'Entry'    },
   { href: '/guard/exit',                  icon: UserMinus,       label: 'Exit'     },
-  { href: '/guard/material',              icon: Package,         label: 'Material' },
+  { href: '/guard/material',              icon: Package,         label: 'Material', module: 'materials' },
 ]
 
-const SECONDARY_NAV = [
-  { href: '/guard/group-entry', icon: Users,         label: 'Group Entry' },
-  { href: '/guard/gate-pass',   icon: Truck,         label: 'Gate Pass'   },
-  { href: '/guard/scan',        icon: QrCode,        label: 'Scan QR'     },
-  { href: '/guard/expected',    icon: CalendarCheck, label: 'Expected'    },
-  { href: '/guard/settings',    icon: Settings,      label: 'Settings'    },
+const SECONDARY_NAV: NavItem[] = [
+  { href: '/guard/group-entry', icon: Users,         label: 'Group Entry', module: 'groups'      },
+  { href: '/guard/gate-pass',   icon: Truck,         label: 'Gate Pass',   module: 'gate_passes' },
+  { href: '/guard/scan',        icon: QrCode,        label: 'Scan QR'                            },
+  { href: '/guard/expected',    icon: CalendarCheck, label: 'Expected'                           },
+  { href: '/guard/settings',    icon: Settings,      label: 'Settings'                           },
 ]
+
+// ── Helper: filter nav items by module config (must be inside ConfigProvider) ─
+
+function filterByModule(items: NavItem[], config: ReturnType<typeof useConfig>): NavItem[] {
+  return items.filter(item => {
+    if (!item.module) return true
+    return (config as unknown as Record<string, unknown>)[`module_${item.module}`] !== false
+  })
+}
+
+// ── Module-aware sidebar nav (rendered inside ConfigProvider tree) ────────────
+
+function GuardSidebarNav({ collapsed, pathname, onClose }: {
+  collapsed: boolean
+  pathname: string
+  onClose: () => void
+}) {
+  const config = useConfig()
+  const items = filterByModule(SIDEBAR_NAV, config)
+
+  return (
+    <nav className="flex-1 px-2 py-3 space-y-px overflow-y-auto">
+      {items.map(({ href, icon: Icon, label }) => {
+        const active = href === '/guard' ? pathname === '/guard' : pathname.startsWith(href)
+        return (
+          <Link
+            key={href}
+            href={href}
+            title={collapsed ? label : undefined}
+            onClick={onClose}
+            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] transition-colors"
+            style={
+              active
+                ? { background: S.activeBg, color: S.textActive, fontWeight: 500 }
+                : { color: S.text }
+            }
+            onMouseEnter={e => { if (!active) e.currentTarget.style.background = S.hoverBg }}
+            onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
+          >
+            <Icon size={16} className="flex-shrink-0" />
+            {!collapsed && <span className="truncate">{label}</span>}
+          </Link>
+        )
+      })}
+    </nav>
+  )
+}
+
+// ── Module-aware bottom nav (rendered inside ConfigProvider tree) ─────────────
+
+function GuardBottomNav() {
+  const config = useConfig()
+  return (
+    <BottomNav
+      primary={filterByModule(PRIMARY_NAV, config)}
+      secondary={filterByModule(SECONDARY_NAV, config)}
+    />
+  )
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -144,31 +210,8 @@ export default function GuardShell({ children }: { children: React.ReactNode }) 
         </button>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-2 py-3 space-y-px overflow-y-auto">
-        {NAV.map(({ href, icon: Icon, label }) => {
-          const active = href === '/guard' ? pathname === '/guard' : pathname.startsWith(href)
-          return (
-            <Link
-              key={href}
-              href={href}
-              title={collapsed ? label : undefined}
-              onClick={closeDrawer}
-              className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[13px] transition-colors"
-              style={
-                active
-                  ? { background: S.activeBg, color: S.textActive, fontWeight: 500 }
-                  : { color: S.text }
-              }
-              onMouseEnter={e => { if (!active) e.currentTarget.style.background = S.hoverBg }}
-              onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent' }}
-            >
-              <Icon size={16} className="flex-shrink-0" />
-              {!collapsed && <span className="truncate">{label}</span>}
-            </Link>
-          )
-        })}
-      </nav>
+      {/* Nav — rendered as a sub-component so useConfig() works inside ConfigProvider */}
+      <GuardSidebarNav collapsed={collapsed} pathname={pathname} onClose={closeDrawer} />
 
       {/* Footer: workspace badge + logout + collapse */}
       <div style={{ borderTop: `1px solid ${S.border}` }}>
@@ -304,8 +347,8 @@ export default function GuardShell({ children }: { children: React.ReactNode }) 
           </main>
         </div>
 
-        {/* Mobile bottom nav */}
-        <BottomNav primary={PRIMARY_NAV} secondary={SECONDARY_NAV} />
+        {/* Mobile bottom nav — module-filtered */}
+        <GuardBottomNav />
 
       </div>
     </ConfigProvider>

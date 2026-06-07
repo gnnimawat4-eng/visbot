@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { Topbar }  from './Topbar'
 import { ConfigProvider } from '@/components/config/ConfigProvider'
+import { useConfig } from '@/lib/config'
 import { BottomNav } from '@/components/ui/BottomNav'
 import {
   LayoutDashboard, Users, Package, Settings,
@@ -12,24 +13,44 @@ import {
 
 // ── Admin bottom nav items (mobile only) ────────────────────────────────────
 
-const PRIMARY_NAV = [
-  { href: '/dashboard', exact: true, icon: LayoutDashboard, label: 'Home'      },
-  { href: '/dashboard/visitors',     icon: Users,           label: 'Visitors'  },
-  { href: '/dashboard/materials',    icon: Package,         label: 'Materials' },
-  { href: '/dashboard/settings',     icon: Settings,        label: 'Settings'  },
+interface NavItem {
+  href: string
+  exact?: boolean
+  icon: React.ComponentType<{ size?: number | string; className?: string }>
+  label: string
+  module?: string
+}
+
+const PRIMARY_NAV: NavItem[] = [
+  { href: '/dashboard',           exact: true, icon: LayoutDashboard, label: 'Home'      },
+  { href: '/dashboard/visitors',               icon: Users,           label: 'Visitors',  module: 'visitors'  },
+  { href: '/dashboard/materials',              icon: Package,         label: 'Materials', module: 'materials' },
+  { href: '/dashboard/settings',               icon: Settings,        label: 'Settings'  },
 ]
 
-const SECONDARY_NAV = [
-  { href: '/dashboard/analytics',    icon: BarChart2,       label: 'Analytics'   },
-  { href: '/dashboard/approvals',    icon: CheckSquare,     label: 'Approvals'   },
-  { href: '/dashboard/gate-passes',  icon: Truck,           label: 'Gate Passes' },
-  { href: '/dashboard/invitations',  icon: CalendarCheck,   label: 'Invitations' },
-  { href: '/dashboard/guards',       icon: Shield,          label: 'Guards'      },
-  { href: '/dashboard/vendors',      icon: Store,           label: 'Vendors'     },
-  { href: '/dashboard/blacklist',    icon: AlertTriangle,   label: 'Blacklist'   },
-  { href: '/dashboard/sms-log',      icon: MessageSquare,   label: 'SMS Log'     },
-  { href: '/dashboard/settings/customize', icon: Sliders,   label: 'Customize'   },
+const SECONDARY_NAV: NavItem[] = [
+  { href: '/dashboard/analytics',    icon: BarChart2,       label: 'Analytics',   module: 'analytics'   },
+  { href: '/dashboard/approvals',    icon: CheckSquare,     label: 'Approvals',   module: 'approvals'   },
+  { href: '/dashboard/gate-passes',  icon: Truck,           label: 'Gate Passes', module: 'gate_passes' },
+  { href: '/dashboard/invitations',  icon: CalendarCheck,   label: 'Invitations', module: 'invitations' },
+  { href: '/dashboard/guards',       icon: Shield,          label: 'Guards'                             },
+  { href: '/dashboard/vendors',      icon: Store,           label: 'Vendors',     module: 'vendors'     },
+  { href: '/dashboard/blacklist',    icon: AlertTriangle,   label: 'Blacklist',   module: 'blacklist'   },
+  { href: '/dashboard/sms-log',      icon: MessageSquare,   label: 'SMS Log'                            },
+  { href: '/dashboard/settings/customize', icon: Sliders,   label: 'Customize'                         },
 ]
+
+// ── Module-aware bottom nav (rendered inside ConfigProvider tree) ─────────────
+
+function DashboardBottomNav() {
+  const config = useConfig()
+  const filter = (items: NavItem[]) =>
+    items.filter(item => {
+      if (!item.module) return true
+      return (config as unknown as Record<string, unknown>)[`module_${item.module}`] !== false
+    })
+  return <BottomNav primary={filter(PRIMARY_NAV)} secondary={filter(SECONDARY_NAV)} />
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -88,8 +109,8 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         </main>
       </div>
 
-      {/* ── Mobile bottom nav ────────────────────────────────────────── */}
-      <BottomNav primary={PRIMARY_NAV} secondary={SECONDARY_NAV} />
+      {/* ── Mobile bottom nav — module-filtered ──────────────────────── */}
+      <DashboardBottomNav />
 
     </div>
     </ConfigProvider>
