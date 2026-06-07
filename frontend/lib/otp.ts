@@ -1,39 +1,85 @@
-import Redis from 'ioredis'
+// Redis is optional — if REDIS_URL is not set, OTPs are stored in-memory (demo mode).
+// This prevents the server from hanging on Vercel when no Redis is configured.
 
-const redis = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379')
+import type { Redis as RedisType } from 'ioredis'
+
+// ── In-memory fallback store ──────────────────────────────────────────────────
+const memStore = new Map<string, { otp: string; expiresAt: number }>()
+
+// ── Lazy Redis client (only created when REDIS_URL is set) ────────────────────
+let _redis: RedisType | null = null
+
+function getRedis(): RedisType | null {
+  if (!process.env.REDIS_URL) return null
+  if (!_redis) {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Redis = require('ioredis') as typeof import('ioredis').default
+    _redis = new Redis(process.env.REDIS_URL, {
+      maxRetriesPerRequest: 1,     // fail fast instead of queueing forever
+      enableOfflineQueue:   false, // reject commands immediately when disconnected
+    })
+    _redis!.on('error', err => console.error('[Redis OTP]', err.message))
+  }
+  return _redis
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function generateOtp(length = 6): string {
   return Array.from({ length }, () => Math.floor(Math.random() * 10)).join('')
 }
 
+// ── Public API ────────────────────────────────────────────────────────────────
+
 /**
- * Send OTP to visitor's phone on ENTRY.
- * Message: "Welcome to [Company]. Your OTP: XXXXXX"
+ * Generate and store an OTP for a phone number.
+ * Returns the OTP string so callers can show it in demo mode.
  */
 export async function sendOtp(phone: string, company?: string): Promise<string> {
   const otp = generateOtp(Number(process.env.OTP_LENGTH) || 6)
   const ttl = Number(process.env.OTP_EXPIRY_SECONDS) || 300
-  await redis.setex(`otp:${phone}`, ttl, otp)
+  const key = `otp:${phone}`
+
+  const r = getRedis()
+  if (r) {
+    await r.setex(key, ttl, otp)
+  } else {
+    memStore.set(key, { otp, expiresAt: Date.now() + ttl * 1000 })
+    console.log(`[OTP DEMO] ${phone} → ${otp}`)
+  }
 
   if (process.env.SMS_PROVIDER === 'fast2sms') {
     const msg = company
-      ? `Welcome to ${company}. Your OTP: ${otp}. Valid for ${ttl / 60} mins.`
-      : `Your VisBot OTP is ${otp}. Valid for ${ttl / 60} mins.`
+      ? `Welcome to ${company}. Your OTP: ${otp}. Valid for ${Math.round(ttl / 60)} mins.`
+      : `Your VisBot OTP is ${otp}. Valid for ${Math.round(ttl / 60)} mins.`
     await sendSms(phone, msg, otp)
   }
+
   return otp
 }
 
 export async function verifyOtp(phone: string, otp: string): Promise<boolean> {
-  const stored = await redis.get(`otp:${phone}`)
-  if (stored !== otp) return false
-  await redis.del(`otp:${phone}`)
+  const key = `otp:${phone}`
+
+  const r = getRedis()
+  if (r) {
+    const stored = await r.get(key)
+    if (stored !== otp) return false
+    await r.del(key)
+    return true
+  }
+
+  // Demo / in-memory mode
+  const entry = memStore.get(key)
+  if (!entry) return false
+  if (entry.expiresAt < Date.now()) { memStore.delete(key); return false }
+  if (entry.otp !== otp) return false
+  memStore.delete(key)
   return true
 }
 
 /**
  * Send checkout notification to HOST phone on VISITOR EXIT.
- * Message: "[VisitorName] has checked out at [Time]"
  */
 export async function sendCheckoutSms(hostPhone: string, visitorName: string, company?: string): Promise<void> {
   const time = new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
@@ -42,7 +88,7 @@ export async function sendCheckoutSms(hostPhone: string, visitorName: string, co
 }
 
 /**
- * Send a plain SMS (DLT route). Used for host checkout notification.
+ * Low-level SMS sender (Fast2SMS). No-op when SMS_PROVIDER is not configured.
  */
 export async function sendSms(phone: string, message: string, otpValue?: string): Promise<void> {
   if (process.env.SMS_PROVIDER !== 'fast2sms') return

@@ -116,15 +116,24 @@ export default function GuardEntryPage() {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: phoneNum }),
       })
-      const data = await res.json()
+      let data: Record<string, unknown> = {}
+      try { data = await res.json() } catch { /* non-JSON body */ }
+
+      if (!res.ok) {
+        toast.error((data.error as string) ?? `OTP send failed (${res.status})`)
+        return
+      }
       if (data.otpSent) {
         setOtpSent(true)
         setOtp('')
-        setOtpCode(data.otp ?? '')
+        setOtpCode((data.otp as string) ?? '')
         startCountdown()
       } else {
         toast.error('Could not send OTP')
       }
+    } catch (err) {
+      console.error('OTP send error:', err)
+      toast.error('Could not send OTP — check your connection')
     } finally {
       setSending(false)
     }
