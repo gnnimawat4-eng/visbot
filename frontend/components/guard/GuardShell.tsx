@@ -9,6 +9,7 @@ import {
   QrCode, CalendarCheck, Users,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useCompanyBranding } from '@/hooks/useCompanyBranding'
 import { ConfigProvider } from '@/components/config/ConfigProvider'
 import { BottomNav } from '@/components/ui/BottomNav'
 
@@ -61,11 +62,12 @@ const SECONDARY_NAV = [
 export default function GuardShell({ children }: { children: React.ReactNode }) {
   const pathname   = usePathname()
   const router     = useRouter()
-  const [collapsed,   setCollapsed]   = useState(false)
-  const [mobileOpen,  setMobileOpen]  = useState(false)
-  const [guardName,   setGuardName]   = useState('')
-  const [companyName, setCompanyName] = useState('')
-  const [logoUrl,     setLogoUrl]     = useState<string | null>(null)
+  const [collapsed,  setCollapsed]  = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [guardName,  setGuardName]  = useState('')
+  const branding    = useCompanyBranding()
+  const companyName = branding?.legal_name || branding?.name || ''
+  const logoUrl     = branding?.logo_url ?? null
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)')
@@ -77,12 +79,7 @@ export default function GuardShell({ children }: { children: React.ReactNode }) 
 
   useEffect(() => {
     fetch('/api/auth/profile').then(r => r.ok ? r.json() : null).then(d => {
-      if (d?.full_name)     setGuardName(d.full_name)
-      if (d?.company?.name) setCompanyName(d.company.name)
-    }).catch(() => {})
-    fetch('/api/dashboard/company').then(r => r.ok ? r.json() : null).then(d => {
-      if (d?.logo_url)               setLogoUrl(d.logo_url)
-      if (d?.legal_name || d?.name)  setCompanyName(n => n || d.legal_name || d.name)
+      if (d?.full_name) setGuardName(d.full_name)
     }).catch(() => {})
   }, [])
 
@@ -173,12 +170,40 @@ export default function GuardShell({ children }: { children: React.ReactNode }) 
         })}
       </nav>
 
-      {/* Footer: guard name + logout + collapse */}
+      {/* Footer: workspace badge + logout + collapse */}
       <div style={{ borderTop: `1px solid ${S.border}` }}>
-        {!collapsed && (guardName || companyName) && (
-          <div className="px-3 py-2.5" style={{ borderBottom: `1px solid ${S.border}` }}>
-            {guardName   && <p className="text-[13px] font-medium truncate" style={{ color: S.logo }}>{guardName}</p>}
-            {companyName && <p className="text-[11px] truncate" style={{ color: S.label }}>{companyName}</p>}
+        {collapsed ? (
+          <div className="flex justify-center py-2">
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt={companyName} className="rounded-lg object-cover"
+                style={{ width: 28, height: 28 }} />
+            ) : (
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold"
+                style={{ background: S.logoGreen, color: '#fff' }}>
+                {(companyName || 'V').charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="mx-2 my-2 px-3 py-2.5 rounded-lg flex items-center gap-2.5"
+            style={{ border: `1px solid ${S.border}` }}>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt={companyName}
+                className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-200" />
+            ) : (
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold flex-shrink-0"
+                style={{ background: S.logoGreen, color: '#fff' }}>
+                {(companyName || 'V').charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-medium leading-tight truncate" style={{ color: S.logo }}>
+                {companyName || '…'}
+              </p>
+              <p className="text-xs leading-tight mt-0.5 text-gray-500">Workspace</p>
+            </div>
           </div>
         )}
         <button

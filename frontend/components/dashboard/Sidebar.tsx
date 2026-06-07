@@ -1,7 +1,6 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
 import {
   LayoutDashboard, Users, Package, Settings,
   Truck, Shield, ChevronLeft, ChevronRight, X,
@@ -9,6 +8,7 @@ import {
   Store, CheckSquare, UserCog, Sliders,
 } from 'lucide-react'
 import { useConfig } from '@/lib/config'
+import { useCompanyBranding } from '@/hooks/useCompanyBranding'
 
 // Light sidebar constants
 const S = {
@@ -84,19 +84,9 @@ interface Props {
 
 export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
   const pathname = usePathname()
-  const config = useConfig()
-  const [companyName, setCompanyName] = useState('')
-  const [logoUrl,     setLogoUrl]     = useState<string | null>(null)
-
-  useEffect(() => {
-    fetch('/api/dashboard/company')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        if (d?.name)     setCompanyName(d.name)
-        if (d?.logo_url) setLogoUrl(d.logo_url)
-      })
-      .catch(() => {})
-  }, [])
+  const config   = useConfig()
+  const branding = useCompanyBranding()
+  const displayName = branding?.legal_name || branding?.name || ''
 
   function isVisible(item: NavItem) {
     if (!item.module) return true
@@ -108,7 +98,7 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
     return pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
   }
 
-  const initial = companyName?.[0]?.toUpperCase() ?? 'V'
+  const initial = displayName?.[0]?.toUpperCase() ?? 'V'
 
   return (
     <aside
@@ -196,9 +186,9 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
       {/* Workspace badge */}
       {collapsed ? (
         <div className="flex justify-center mb-2">
-          {logoUrl ? (
+          {branding?.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt={companyName} className="rounded-lg object-cover"
+            <img src={branding.logo_url} alt={displayName} className="rounded-lg object-cover"
               style={{ width: 28, height: 28 }} />
           ) : (
             <div
@@ -214,23 +204,23 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
           className="mx-2 mb-2 px-3 py-2.5 rounded-lg flex items-center gap-2.5"
           style={{ background: S.badgeBg, border: `1px solid ${S.border}` }}
         >
-          {logoUrl ? (
+          {branding?.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt={companyName} className="rounded-lg object-cover flex-shrink-0"
-              style={{ width: 28, height: 28 }} />
+            <img src={branding.logo_url} alt={displayName}
+              className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-200" />
           ) : (
             <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+              className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold flex-shrink-0"
               style={{ background: S.logoGreen, color: '#fff' }}
             >
               {initial}
             </div>
           )}
           <div className="min-w-0">
-            <p className="text-[13px] font-medium leading-tight truncate" style={{ color: S.logo }}>
-              {companyName || '…'}
+            <p className="text-sm font-medium leading-tight truncate" style={{ color: S.logo }}>
+              {displayName || '…'}
             </p>
-            <p className="text-[11px] leading-tight mt-0.5" style={{ color: S.label }}>Workspace</p>
+            <p className="text-xs leading-tight mt-0.5 text-gray-500">Workspace</p>
           </div>
         </div>
       )}

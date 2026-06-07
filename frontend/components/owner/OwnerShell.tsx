@@ -7,6 +7,7 @@ import {
   ChevronLeft, ChevronRight, LogOut, Menu, X,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { useCompanyBranding } from '@/hooks/useCompanyBranding'
 
 // ── Light sidebar constants (matches admin Sidebar.tsx) ──────────────────────
 const S = {
@@ -34,8 +35,10 @@ const NAV = [
 export default function OwnerShell({ children }: { children: React.ReactNode }) {
   const [collapsed,  setCollapsed]  = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const pathname = usePathname()
-  const router   = useRouter()
+  const pathname  = usePathname()
+  const router    = useRouter()
+  const branding  = useCompanyBranding()
+  const ownerName = branding?.legal_name || branding?.name || ''
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)')
@@ -121,6 +124,42 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
           )
         })}
       </nav>
+
+      {/* Workspace badge */}
+      {collapsed ? (
+        <div className="flex justify-center mb-2">
+          {branding?.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={branding.logo_url} alt={ownerName} className="rounded-lg object-cover"
+              style={{ width: 28, height: 28 }} />
+          ) : (
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold"
+              style={{ background: S.logoGreen, color: '#fff' }}>
+              {(ownerName || 'V').charAt(0).toUpperCase()}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="mx-2 mb-2 px-3 py-2.5 rounded-lg flex items-center gap-2.5"
+          style={{ border: `1px solid ${S.border}` }}>
+          {branding?.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={branding.logo_url} alt={ownerName}
+              className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-200" />
+          ) : (
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold flex-shrink-0"
+              style={{ background: S.logoGreen, color: '#fff' }}>
+              {(ownerName || 'V').charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div className="min-w-0">
+            <p className="text-sm font-medium leading-tight truncate" style={{ color: S.logo }}>
+              {ownerName || 'VisBot'}
+            </p>
+            <p className="text-xs leading-tight mt-0.5 text-gray-500">Workspace</p>
+          </div>
+        </div>
+      )}
 
       {/* Bottom: logout + collapse */}
       <div style={{ borderTop: `1px solid ${S.border}` }}>
