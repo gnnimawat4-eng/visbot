@@ -9,12 +9,16 @@ interface Props { onMenuClick?: () => void }
 export function Topbar({ onMenuClick }: Props) {
   const router = useRouter()
   const [companyName, setCompanyName] = useState('')
+  const [logoUrl,     setLogoUrl]     = useState<string | null>(null)
   const [userInitial, setUserInitial] = useState('?')
 
   useEffect(() => {
     fetch('/api/dashboard/company')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.name) setCompanyName(d.name) })
+      .then(d => {
+        if (d?.name)     setCompanyName(d.legal_name || d.name)
+        if (d?.logo_url) setLogoUrl(d.logo_url)
+      })
       .catch(() => {})
 
     createClient().auth.getUser().then(({ data }) => {
@@ -46,9 +50,16 @@ export function Topbar({ onMenuClick }: Props) {
         >
           <Menu size={16} />
         </button>
-        <span className="text-sm font-medium" style={{ color: '#0A0A0A' }}>
-          {companyName || 'Dashboard'}
-        </span>
+        <div className="flex items-center gap-2">
+          {logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt={companyName} className="rounded-md object-cover flex-shrink-0"
+              style={{ width: 22, height: 22 }} />
+          )}
+          <span className="text-sm font-medium" style={{ color: '#0A0A0A' }}>
+            {companyName || 'Dashboard'}
+          </span>
+        </div>
       </div>
 
       <div className="flex items-center gap-1">

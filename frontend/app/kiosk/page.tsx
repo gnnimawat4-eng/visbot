@@ -1,14 +1,18 @@
 'use client'
-import { CheckInForm }    from '@/components/kiosk/CheckInForm'
-import { PhotoCapture }   from '@/components/kiosk/PhotoCapture'
-import { OtpVerify }      from '@/components/kiosk/OtpVerify'
-import { useCheckInFlow } from '@/hooks/useCheckInFlow'
+import { CheckInForm }        from '@/components/kiosk/CheckInForm'
+import { PhotoCapture }       from '@/components/kiosk/PhotoCapture'
+import { OtpVerify }          from '@/components/kiosk/OtpVerify'
+import { useCheckInFlow }     from '@/hooks/useCheckInFlow'
+import { useCompanyBranding } from '@/hooks/useCompanyBranding'
 import { useState } from 'react'
 import { Maximize2 } from 'lucide-react'
 
 export default function KioskPage() {
   const { step, visitorData, setStep, setVisitorData } = useCheckInFlow()
   const [fullscreen, setFullscreen] = useState(false)
+  const branding = useCompanyBranding()
+  const companyName = branding?.legal_name || branding?.name || 'VisBot'
+  const logoUrl     = branding?.logo_url
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -36,9 +40,18 @@ export default function KioskPage() {
         {/* Header */}
         <div className="bg-gray-900 px-8 pt-8 pb-6">
           <div className="text-center mb-6">
-            <h1 className="text-3xl font-bold text-white">
-              Vis<span className="text-brand-400">Bot</span>
-            </h1>
+            {logoUrl ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoUrl} alt={companyName} className="mx-auto rounded-2xl object-contain mb-3"
+                  style={{ width: 64, height: 64 }} />
+                <h1 className="text-xl font-bold text-white">{companyName}</h1>
+              </>
+            ) : (
+              <h1 className="text-3xl font-bold text-white">
+                Vis<span className="text-brand-400">Bot</span>
+              </h1>
+            )}
             <p className="text-gray-400 text-sm mt-1">Visitor Check-In</p>
           </div>
 

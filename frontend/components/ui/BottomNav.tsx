@@ -51,8 +51,8 @@ export function BottomNav({ primary, secondary = [] }: BottomNavProps) {
             moreOpen ? 'translate-y-0' : 'translate-y-full',
           ].join(' ')}
           style={{
-            background: 'var(--vb-bg-sidebar)',
-            borderTop: '1px solid var(--vb-border)',
+            background: '#FFFFFF',
+            borderTop: '1px solid #EAEAEA',
           }}
         >
           <div className="flex items-center justify-between px-5 pt-4 pb-3">
@@ -88,8 +88,8 @@ export function BottomNav({ primary, secondary = [] }: BottomNavProps) {
       <nav
         className="fixed inset-x-0 bottom-0 z-30 flex md:hidden"
         style={{
-          background: 'var(--vb-bg-sidebar)',
-          borderTop: '1px solid var(--vb-border)',
+          background: '#FFFFFF',
+          borderTop: '1px solid #EAEAEA',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}
       >
@@ -101,13 +101,13 @@ export function BottomNav({ primary, secondary = [] }: BottomNavProps) {
               key={item.href}
               href={item.href}
               className="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 relative transition-colors"
-              style={{ color: active ? 'var(--vb-accent)' : 'var(--vb-text-3)', minHeight: '56px' }}
+              style={{ color: active ? '#10B981' : '#9CA3AF', minHeight: '56px' }}
             >
               {/* Active top-line indicator */}
               {active && (
                 <span
                   className="absolute top-0 left-4 right-4 h-0.5 rounded-full"
-                  style={{ background: 'var(--vb-accent)' }}
+                  style={{ background: '#10B981' }}
                 />
               )}
               <div className="relative">

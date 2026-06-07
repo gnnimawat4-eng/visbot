@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import {
-  ArrowLeft, Save, RotateCcw, Download, Loader2,
+  ArrowLeft, Save, RotateCcw, Download, Loader2, Upload,
   LayoutDashboard, Grid3X3, KeyRound, ListChecks,
   Type, ListOrdered, Bell, Shield, Lock, Palette,
   Gauge, Database, History, Check, X, ChevronDown,
@@ -14,7 +14,7 @@ import { format } from 'date-fns'
 
 type TabKey = 'overview' | 'modules' | 'otp' | 'fields' | 'labels' |
               'dropdowns' | 'notifications' | 'access' | 'security' |
-              'branding' | 'limits' | 'retention' | 'history'
+              'branding' | 'company_branding' | 'limits' | 'retention' | 'history'
 
 interface Template { name: string; display_name: string; icon: string; description: string }
 interface Company  { id: string; name: string; slug: string; plan: string; active: boolean }
@@ -30,8 +30,9 @@ const TABS: { key: TabKey; label: string; icon: React.ComponentType<{ size?: str
   { key: 'notifications',  label: 'Notifications',    icon: Bell },
   { key: 'access',         label: 'Access Rules',     icon: Shield },
   { key: 'security',       label: 'Security',         icon: Lock },
-  { key: 'branding',       label: 'Branding',         icon: Palette },
-  { key: 'limits',         label: 'Limits',           icon: Gauge },
+  { key: 'branding',         label: 'Branding',          icon: Palette },
+  { key: 'company_branding', label: 'Company Identity',  icon: Palette },
+  { key: 'limits',           label: 'Limits',            icon: Gauge },
   { key: 'retention',      label: 'Data Retention',   icon: Database },
   { key: 'history',        label: 'Config History',   icon: History },
 ]
@@ -657,6 +658,251 @@ function HistoryTab({ companyId }: { companyId: string }) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// COMPANY IDENTITY / BRANDING TAB (for owner to edit any company)
+// ─────────────────────────────────────────────────────────────
+
+interface BrandingForm {
+  logo_url: string; signature_url: string; stamp_url: string
+  legal_name: string; address_line1: string; address_line2: string
+  city: string; state: string; pincode: string
+  gst_number: string; cin_number: string; phone: string
+  email: string; website: string
+  authorized_signatory_name: string; authorized_signatory_designation: string
+  footer_text: string
+}
+
+const EMPTY_BRANDING: BrandingForm = {
+  logo_url: '', signature_url: '', stamp_url: '',
+  legal_name: '', address_line1: '', address_line2: '',
+  city: '', state: '', pincode: '',
+  gst_number: '', cin_number: '', phone: '',
+  email: '', website: '',
+  authorized_signatory_name: '', authorized_signatory_designation: '',
+  footer_text: '',
+}
+
+function BrandingUploadZone({
+  label, value, companyId, assetType, onUploaded,
+}: {
+  label: string; value: string; companyId: string
+  assetType: 'logo' | 'signature' | 'stamp'
+  onUploaded: (url: string) => void
+}) {
+  const [uploading, setUploading] = useState(false)
+
+  const handleFile = async (file: File) => {
+    setUploading(true)
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('type', assetType)
+    fd.append('company_id', companyId)
+    try {
+      const res = await fetch('/api/dashboard/branding/upload', { method: 'POST', body: fd })
+      const d   = await res.json()
+      if (d.url) onUploaded(d.url)
+      else toast.error(d.error ?? 'Upload failed')
+    } catch { toast.error('Upload failed') }
+    setUploading(false)
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">{label}</label>
+      <div
+        className="relative border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-brand-400 transition-colors"
+        style={{ minHeight: 90 }}
+        onClick={() => {
+          const inp = document.createElement('input')
+          inp.type = 'file'; inp.accept = 'image/*'
+          inp.onchange = e => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) handleFile(f) }
+          inp.click()
+        }}
+        onDragOver={e => e.preventDefault()}
+        onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
+      >
+        {uploading ? (
+          <Loader2 size={20} className="animate-spin text-gray-400" />
+        ) : value ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={value} alt={label} className="max-h-16 max-w-full object-contain rounded" />
+        ) : (
+          <div className="text-center py-4">
+            <Upload size={18} className="mx-auto text-gray-300 mb-1" />
+            <p className="text-xs text-gray-400">Click or drag to upload</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function OwnerCompanyBrandingTab({ companyId }: { companyId: string }) {
+  const [form,    setForm]    = useState<BrandingForm>(EMPTY_BRANDING)
+  const [loading, setLoading] = useState(true)
+  const [saving,  setSaving]  = useState(false)
+
+  useEffect(() => {
+    fetch(`/api/dashboard/company?id=${companyId}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d) setForm({
+          logo_url:                        d.logo_url                        ?? '',
+          signature_url:                   d.signature_url                   ?? '',
+          stamp_url:                        d.stamp_url                       ?? '',
+          legal_name:                       d.legal_name                      ?? '',
+          address_line1:                    d.address_line1                   ?? '',
+          address_line2:                    d.address_line2                   ?? '',
+          city:                             d.city                            ?? '',
+          state:                            d.state                           ?? '',
+          pincode:                          d.pincode                         ?? '',
+          gst_number:                       d.gst_number                      ?? '',
+          cin_number:                       d.cin_number                      ?? '',
+          phone:                            d.phone                           ?? '',
+          email:                            d.email                           ?? '',
+          website:                          d.website                         ?? '',
+          authorized_signatory_name:        d.authorized_signatory_name       ?? '',
+          authorized_signatory_designation: d.authorized_signatory_designation ?? '',
+          footer_text:                      d.footer_text                     ?? '',
+        })
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [companyId])
+
+  const set = (key: keyof BrandingForm) => (val: string) =>
+    setForm(prev => ({ ...prev, [key]: val }))
+
+  const save = async () => {
+    setSaving(true)
+    try {
+      const body = { id: companyId, ...Object.fromEntries(
+        Object.entries(form).map(([k, v]) => [k, v || null])
+      ) }
+      const res  = await fetch('/api/dashboard/company', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const d = await res.json()
+      if (d.id) toast.success('Branding saved')
+      else toast.error(d.error ?? 'Save failed')
+    } catch { toast.error('Network error') }
+    setSaving(false)
+  }
+
+  if (loading) return <div className={CARD + ' animate-pulse'}><div className="h-40 bg-gray-100 dark:bg-gray-800 rounded" /></div>
+
+  const F = INPUT + ' w-full'
+
+  return (
+    <div className="space-y-5">
+      {/* Assets */}
+      <div className={CARD}>
+        <SectionHead title="Logo & Documents" desc="Uploaded files appear in gate pass PDFs and all dashboards." />
+        <div className="grid grid-cols-3 gap-4">
+          <BrandingUploadZone label="Company Logo"       value={form.logo_url}      companyId={companyId} assetType="logo"      onUploaded={set('logo_url')} />
+          <BrandingUploadZone label="Authorized Signature" value={form.signature_url} companyId={companyId} assetType="signature" onUploaded={set('signature_url')} />
+          <BrandingUploadZone label="Company Stamp"      value={form.stamp_url}     companyId={companyId} assetType="stamp"     onUploaded={set('stamp_url')} />
+        </div>
+      </div>
+
+      {/* Identity */}
+      <div className={CARD}>
+        <SectionHead title="Company Identity" desc="Appears in PDF headers and kiosk / invite pages." />
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Legal Name</label>
+            <input value={form.legal_name} onChange={e => set('legal_name')(e.target.value)} className={F} placeholder="Full legal entity name" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Address Line 1</label>
+              <input value={form.address_line1} onChange={e => set('address_line1')(e.target.value)} className={F} placeholder="Street / building" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Address Line 2</label>
+              <input value={form.address_line2} onChange={e => set('address_line2')(e.target.value)} className={F} placeholder="Area / landmark" />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">City</label>
+              <input value={form.city} onChange={e => set('city')(e.target.value)} className={F} placeholder="Mumbai" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">State</label>
+              <input value={form.state} onChange={e => set('state')(e.target.value)} className={F} placeholder="Maharashtra" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Pincode</label>
+              <input value={form.pincode} onChange={e => set('pincode')(e.target.value)} className={F} placeholder="400001" maxLength={6} />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">GST Number</label>
+              <input value={form.gst_number} onChange={e => set('gst_number')(e.target.value.toUpperCase())} className={F} placeholder="22AAAAA0000A1Z5" maxLength={15} />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">CIN Number</label>
+              <input value={form.cin_number} onChange={e => set('cin_number')(e.target.value.toUpperCase())} className={F} placeholder="U74999MH2020OPC345678" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Phone</label>
+              <input value={form.phone} onChange={e => set('phone')(e.target.value)} className={F} placeholder="+91 98765 43210" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Email</label>
+              <input type="email" value={form.email} onChange={e => set('email')(e.target.value)} className={F} placeholder="info@company.com" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Website</label>
+            <input value={form.website} onChange={e => set('website')(e.target.value)} className={F} placeholder="https://company.com" />
+          </div>
+        </div>
+      </div>
+
+      {/* Signatory */}
+      <div className={CARD}>
+        <SectionHead title="Authorized Signatory" desc="Printed below the signature block on gate passes." />
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
+            <input value={form.authorized_signatory_name} onChange={e => set('authorized_signatory_name')(e.target.value)} className={F} placeholder="Rajesh Kumar" />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Designation</label>
+            <input value={form.authorized_signatory_designation} onChange={e => set('authorized_signatory_designation')(e.target.value)} className={F} placeholder="Head of Security" />
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className={CARD}>
+        <SectionHead title="PDF Footer Text" desc="Printed at the bottom of all generated gate pass PDFs." />
+        <textarea
+          value={form.footer_text}
+          onChange={e => set('footer_text')(e.target.value)}
+          rows={3}
+          className={INPUT + ' w-full resize-none'}
+          placeholder="This is a system-generated document. Valid for one-time use only."
+        />
+      </div>
+
+      <div className="flex justify-end">
+        <button onClick={save} disabled={saving}
+          className="flex items-center gap-2 px-5 py-2 bg-brand-500 text-white rounded-lg text-sm font-medium hover:bg-brand-600 disabled:opacity-50">
+          {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+          {saving ? 'Saving…' : 'Save Identity'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────
 // MAIN PAGE
 // ─────────────────────────────────────────────────────────────
 
@@ -731,8 +977,9 @@ export default function ConfigurePage() {
     notifications:  <NotificationsTab config={config} onChange={update} />,
     access:         <AccessTab config={config} onChange={update} />,
     security:       <SecurityTab config={config} onChange={update} />,
-    branding:       <BrandingTab config={config} onChange={update} />,
-    limits:         <LimitsTab config={config} onChange={update} />,
+    branding:         <BrandingTab config={config} onChange={update} />,
+    company_branding: <OwnerCompanyBrandingTab companyId={id} />,
+    limits:           <LimitsTab config={config} onChange={update} />,
     retention:      <RetentionTab config={config} onChange={update} />,
     history:        <HistoryTab companyId={id} />,
   }

@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { resolveCompanyId } from '@/lib/resolveCompanyId'
 
-export async function GET() {
-  const CID      = await resolveCompanyId()
+export async function GET(req: NextRequest) {
+  const qId      = req.nextUrl.searchParams.get('id')
+  const CID      = qId ?? (await resolveCompanyId())
   const supabase = createAdminClient()
   let q = supabase.from('companies').select('*')
   if (CID) q = q.eq('id', CID)

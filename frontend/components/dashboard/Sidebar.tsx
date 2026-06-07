@@ -86,11 +86,15 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
   const pathname = usePathname()
   const config = useConfig()
   const [companyName, setCompanyName] = useState('')
+  const [logoUrl,     setLogoUrl]     = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/dashboard/company')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.name) setCompanyName(d.name) })
+      .then(d => {
+        if (d?.name)     setCompanyName(d.name)
+        if (d?.logo_url) setLogoUrl(d.logo_url)
+      })
       .catch(() => {})
   }, [])
 
@@ -192,24 +196,36 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
       {/* Workspace badge */}
       {collapsed ? (
         <div className="flex justify-center mb-2">
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold"
-            style={{ background: S.logoGreen, color: '#fff' }}
-          >
-            {initial}
-          </div>
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt={companyName} className="rounded-lg object-cover"
+              style={{ width: 28, height: 28 }} />
+          ) : (
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold"
+              style={{ background: S.logoGreen, color: '#fff' }}
+            >
+              {initial}
+            </div>
+          )}
         </div>
       ) : (
         <div
           className="mx-2 mb-2 px-3 py-2.5 rounded-lg flex items-center gap-2.5"
           style={{ background: S.badgeBg, border: `1px solid ${S.border}` }}
         >
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
-            style={{ background: S.logoGreen, color: '#fff' }}
-          >
-            {initial}
-          </div>
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt={companyName} className="rounded-lg object-cover flex-shrink-0"
+              style={{ width: 28, height: 28 }} />
+          ) : (
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0"
+              style={{ background: S.logoGreen, color: '#fff' }}
+            >
+              {initial}
+            </div>
+          )}
           <div className="min-w-0">
             <p className="text-[13px] font-medium leading-tight truncate" style={{ color: S.logo }}>
               {companyName || '…'}
