@@ -169,3 +169,21 @@
   border: 1px solid var(--vb-border);
   background: var(--vb-bg-card);
 }
+
+/* ── Print: global UI-chrome suppression ─────────────────────────────────── */
+@media print {
+  /* Hard-hide anything marked no-print, plus common shell elements */
+  .no-print,
+  nav,
+  header,
+  aside {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Ensure body doesn't clip multi-page content */
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+}

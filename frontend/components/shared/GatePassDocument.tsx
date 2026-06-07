@@ -35,7 +35,7 @@ const PRINT_CSS = `
   @page { size: A4 portrait; margin: 15mm; }
 
   @media print {
-    /* Hide everything; only .print-content and its children remain visible */
+    /* ── Isolation: only .print-content and its descendants are visible ── */
     body * { visibility: hidden; }
     .print-content, .print-content * { visibility: visible; }
     .print-content {
@@ -43,16 +43,64 @@ const PRINT_CSS = `
       top: 0;
       left: 0;
       width: 100%;
+      overflow: visible; /* allow content to flow across pages */
     }
 
+    /* ── Hard-hide UI chrome (display:none beats visibility for fixed elements) ── */
+    .no-print,
+    nav, header, aside {
+      display: none !important;
+      visibility: hidden !important;
+    }
+
+    /* ── Document wrapper must not clip multi-page content ── */
+    .gp-wrapper {
+      overflow: visible !important;
+      max-width: none !important;
+    }
+
+    /* ── Color printing ── */
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     body { margin: 0; }
-    .no-print { display: none !important; }
+
+    /* ── Watermark stays centered on every page ── */
     .watermark {
       position: fixed !important;
       top: 50% !important;
       left: 50% !important;
     }
+
+    /* ── Page break rules ── */
+    .gate-pass-header,
+    .gate-pass-title,
+    .gate-pass-meta {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .signatures-section,
+    .footer-section {
+      page-break-inside: avoid;
+      break-inside: avoid;
+      page-break-before: auto;
+      break-before: auto;
+    }
+
+    /* Allow table to break across pages, but keep each row intact */
+    table {
+      page-break-inside: auto;
+      break-inside: auto;
+    }
+    tr {
+      page-break-inside: avoid;
+      break-inside: avoid;
+      page-break-after: auto;
+      break-after: auto;
+    }
+
+    /* Repeat table header on every printed page */
+    thead { display: table-header-group; }
+    tfoot { display: table-footer-group; }
   }
 
   .gp-wrapper { position: relative; overflow: hidden; }
@@ -142,7 +190,7 @@ export function GatePassDocument({ gp, branding }: Props) {
         <div className="relative" style={{ zIndex: 1 }}>
 
           {/* ── S1: Company header ─────────────────────────────────────────── */}
-          <div className="border-2 border-black p-4">
+          <div className="gate-pass-header border-2 border-black p-4">
             <div className="grid items-start" style={{ gridTemplateColumns: '20% 60% 20%' }}>
               {/* Logo */}
               <div className="flex items-center justify-center">
@@ -180,14 +228,14 @@ export function GatePassDocument({ gp, branding }: Props) {
 
           {/* ── S2: Title bar ──────────────────────────────────────────────── */}
           <div
-            className="text-center font-bold text-xl py-3 uppercase tracking-widest"
+            className="gate-pass-title text-center font-bold text-xl py-3 uppercase tracking-widest"
             style={{ background: '#000', color: '#fff' }}
           >
             Material Gate Pass
           </div>
 
           {/* ── S3: Meta info ──────────────────────────────────────────────── */}
-          <div className="border border-t-0 border-black p-3">
+          <div className="gate-pass-meta border border-t-0 border-black p-3">
             <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
               <div className="flex gap-2">
                 <span className="font-semibold w-28 flex-shrink-0">Pass No.</span>
@@ -286,7 +334,7 @@ export function GatePassDocument({ gp, branding }: Props) {
           </div>
 
           {/* ── S7: Signatures ─────────────────────────────────────────────── */}
-          <div className="border border-t-0 border-black grid grid-cols-3 divide-x divide-black">
+          <div className="signatures-section border border-t-0 border-black grid grid-cols-3 divide-x divide-black">
             {/* Prepared by */}
             <div className="p-4">
               <p className="text-xs font-semibold text-gray-600 mb-2">Prepared by</p>
@@ -345,7 +393,7 @@ export function GatePassDocument({ gp, branding }: Props) {
           </div>
 
           {/* ── S8: Footer ─────────────────────────────────────────────────── */}
-          <div className="border border-t-0 border-black p-3 text-center">
+          <div className="footer-section border border-t-0 border-black p-3 text-center">
             <p className="text-xs text-gray-500">
               {branding?.footer_text || 'This is a system-generated document. Subject to terms and conditions.'}
             </p>
