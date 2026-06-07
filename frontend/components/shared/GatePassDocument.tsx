@@ -59,6 +59,11 @@ const PRINT_CSS = `
       max-width: none !important;
     }
 
+    /* ── Unblock flex shell containers that would clip content ── */
+    .h-screen { height: auto !important; }
+    .overflow-hidden, .overflow-y-auto { overflow: visible !important; }
+    .flex-1 { flex: none !important; }
+
     /* ── Color printing ── */
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     body { margin: 0; }
@@ -134,9 +139,9 @@ const MIN_ROWS = 5
 function LabelVal({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="flex flex-col gap-0.5 text-sm">
-      <span className="font-semibold text-gray-700 text-xs">{label}</span>
+      <span className="font-semibold text-gray-600 text-xs">{label}</span>
       <span
-        className="border-b border-dotted border-gray-400 pb-0.5 min-h-[20px]"
+        className="text-gray-900 border-b border-dotted border-gray-400 pb-0.5 min-h-[20px]"
         style={{ minWidth: '120px' }}
       >
         {value || ''}
@@ -180,7 +185,7 @@ export function GatePassDocument({ gp, branding }: Props) {
     <>
       <style>{PRINT_CSS}</style>
 
-      <div className="gp-wrapper print-content max-w-[780px] mx-auto bg-white">
+      <div className="gp-wrapper print-content max-w-[780px] mx-auto bg-white text-black">
         {/* Watermark */}
         <div className="watermark" aria-hidden>
           {companyName.toUpperCase() || 'VISBOT'}
@@ -289,14 +294,14 @@ export function GatePassDocument({ gp, branding }: Props) {
             <tbody>
               {itemRows.map((item, i) => (
                 <tr key={i} style={{ minHeight: '32px', height: '32px' }}>
-                  <td className="text-center text-sm">{item.name ? i + 1 : ' '}</td>
-                  <td className="text-sm">{item.name || ' '}</td>
-                  <td className="text-center text-sm">{item.name ? item.quantity : ' '}</td>
-                  <td className="text-center text-sm">{item.name ? item.unit : ' '}</td>
-                  <td className="text-center text-sm">
+                  <td className="text-center text-sm text-gray-900">{item.name ? i + 1 : ' '}</td>
+                  <td className="text-sm text-gray-900">{item.name || ' '}</td>
+                  <td className="text-center text-sm text-gray-900">{item.name ? item.quantity : ' '}</td>
+                  <td className="text-center text-sm text-gray-900">{item.name ? item.unit : ' '}</td>
+                  <td className="text-center text-sm text-gray-900">
                     {item.name && item.weight != null ? `${item.weight} ${gp.weight_unit}` : ' '}
                   </td>
-                  <td className="text-sm">{' '}</td>
+                  <td className="text-sm text-gray-900">{' '}</td>
                 </tr>
               ))}
               {gp.total_weight != null && (

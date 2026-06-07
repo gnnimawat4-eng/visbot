@@ -80,7 +80,7 @@ export default function GuardGatePassDetailPage() {
           <ArrowLeft size={14} /> Back
         </button>
         <div className="flex items-center gap-2">
-          {gp.status === 'inside' && (
+          {gp.pass_type === 'outward' && gp.status === 'inside' && (
             <button
               onClick={markExited}
               disabled={exiting}
