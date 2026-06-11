@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Search, LogOut, CheckCircle, Loader2, RotateCcw } from 'lucide-react'
 import { OtpBoxes } from '@/components/ui/OtpBoxes'
 import { formatTime } from '@/lib/utils'
+import { useConfig } from '@/lib/config'
 import toast from 'react-hot-toast'
 
 interface CheckIn {
@@ -24,6 +25,9 @@ interface CardOtp {
 }
 
 export default function GuardExitPage() {
+  const config  = useConfig()
+  const otpLen  = config.otp_length || 6
+
   const [query,   setQuery]   = useState('')
   const [rows,    setRows]    = useState<CheckIn[]>([])
   const [loading, setLoading] = useState(true)
@@ -50,6 +54,39 @@ export default function GuardExitPage() {
     return () => { Object.values(timers.current).forEach(clearInterval) }
   }, [])
 
+  // ── Complete exit without OTP (when otp_required_on_exit is false) ────────
+  const directExit = useCallback(async (row: CheckIn) => {
+    setCardOtps(prev => ({
+      ...prev,
+      [row.id]: { sent: false, code: '', value: '', sending: true, confirming: false, countdown: 0 },
+    }))
+    try {
+      const res  = await fetch(`/api/guard/exit/${row.id}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setDone(row.id)
+        toast.success(`${row.visitor?.name ?? 'Visitor'} checked out`)
+        if (data.sms?.success) {
+          toast.success(`Exit notification sent to host ${data.sms.hostName}`, { icon: '💬' })
+        }
+        setTimeout(() => {
+          setRows(prev => prev.filter(r => r.id !== row.id))
+          setDone(null)
+          setCardOtps(prev => { const n = { ...prev }; delete n[row.id]; return n })
+        }, 1500)
+      } else {
+        toast.error(data.error ?? 'Failed to check out')
+        setCardOtps(prev => { const n = { ...prev }; delete n[row.id]; return n })
+      }
+    } catch {
+      toast.error('Network error')
+      setCardOtps(prev => { const n = { ...prev }; delete n[row.id]; return n })
+    }
+  }, [])
+
   // ── Start countdown for a card ────────────────────────────────────
   const startCountdown = (id: string) => {
     if (timers.current[id]) clearInterval(timers.current[id])
@@ -68,6 +105,12 @@ export default function GuardExitPage() {
 
   // ── Send OTP and expand card ──────────────────────────────────────
   const openCard = async (row: CheckIn) => {
+    // Skip OTP flow if not required by config
+    if (!config.otp_required_on_exit) {
+      await directExit(row)
+      return
+    }
+
     const phone = row.visitor?.phone
     if (!phone) { toast.error('No visitor phone on record'); return }
 
@@ -125,10 +168,10 @@ export default function GuardExitPage() {
     }
   }
 
-  // ── Confirm exit ──────────────────────────────────────────────────
+  // ── Confirm exit with OTP ─────────────────────────────────────────
   const confirmExit = async (row: CheckIn) => {
     const state = cardOtps[row.id]
-    if (!state || state.value.length < 6) return
+    if (!state || state.value.length < otpLen) return
 
     setCardOtps(prev => ({ ...prev, [row.id]: { ...prev[row.id], confirming: true } }))
 
@@ -152,7 +195,6 @@ export default function GuardExitPage() {
       }, 1500)
     } else {
       toast.error(data.error ?? 'Invalid OTP')
-      // Clear entered digits so visitor can retry
       setCardOtps(prev => ({ ...prev, [row.id]: { ...prev[row.id], confirming: false, value: '' } }))
     }
   }
@@ -225,25 +267,25 @@ export default function GuardExitPage() {
 
                   {isDone ? (
                     <CheckCircle size={22} className="text-brand-500 flex-shrink-0" />
-                  ) : otpState ? (
+                  ) : otpState && config.otp_required_on_exit ? (
                     <button
                       onClick={() => cancelCard(row.id)}
                       className="text-xs text-gray-400 hover:text-gray-600 flex-shrink-0"
                     >
                       Cancel
                     </button>
-                  ) : (
+                  ) : !otpState ? (
                     <button
                       onClick={() => openCard(row)}
                       className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 text-white text-xs font-semibold rounded-lg hover:bg-orange-600 transition-colors flex-shrink-0"
                     >
                       <LogOut size={13} /> Exit
                     </button>
-                  )}
+                  ) : null}
                 </div>
 
-                {/* ── OTP expansion ── */}
-                {otpState && !isDone && (
+                {/* ── OTP expansion (only when OTP required) ── */}
+                {otpState && config.otp_required_on_exit && !isDone && (
                   <div className="px-4 pb-4 border-t border-gray-100 dark:border-gray-800 pt-4 space-y-3">
                     {otpState.sending ? (
                       <div className="flex items-center justify-center gap-2 py-3 text-sm text-gray-400">
@@ -269,6 +311,7 @@ export default function GuardExitPage() {
                             [row.id]: { ...prev[row.id], value: val },
                           }))}
                           disabled={otpState.confirming}
+                          length={otpLen}
                         />
 
                         <div className="flex items-center justify-between gap-3">
@@ -287,7 +330,7 @@ export default function GuardExitPage() {
 
                           <button
                             onClick={() => confirmExit(row)}
-                            disabled={otpState.confirming || otpState.value.length < 6}
+                            disabled={otpState.confirming || otpState.value.length < otpLen}
                             className="px-4 py-2 bg-orange-500 text-white text-xs font-semibold rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors flex items-center gap-1.5"
                           >
                             {otpState.confirming

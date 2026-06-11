@@ -3,12 +3,18 @@ import { useState } from 'react'
 type Step = 'form' | 'photo' | 'otp' | 'done'
 
 export interface VisitorFormData {
-  name: string
-  phone: string
-  purpose: 'meeting' | 'delivery' | 'interview' | 'other'
-  host: string
-  returning?: boolean
-  photoUrl?: string
+  name:         string
+  phone:        string
+  purpose:      string
+  host:         string
+  returning?:   boolean
+  skipOtp?:     boolean
+  photoUrl?:    string
+  photo_url?:   string
+  email?:       string
+  company?:     string
+  vehicle?:     string
+  meeting_room?: string
 }
 
 export function useCheckInFlow() {

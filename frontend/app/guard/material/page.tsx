@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { PhotoCaptureWidget } from '@/components/ui/PhotoCaptureWidget'
 import { VendorAutocomplete } from '@/components/ui/VendorAutocomplete'
+import { useField } from '@/lib/config'
 
 interface ActiveCheckin { id: string; host_name: string; visitor: { name: string } | null }
 interface Category {
@@ -20,6 +21,14 @@ const LABEL = 'block text-xs font-semibold text-gray-500 dark:text-gray-400 uppe
 function GuardMaterialPageInner() {
   const searchParams = useSearchParams()
   const defaultDir   = (searchParams.get('d') ?? 'out') as 'in' | 'out'
+
+  const fDesc       = useField('material_description')
+  const fQty        = useField('material_quantity')
+  const fCategory   = useField('material_category')
+  const fValue      = useField('material_value')
+  const fVendor     = useField('material_vendor')
+  const fPhoto      = useField('material_photo')
+  const fReturnable = useField('material_returnable')
 
   const [itemName,       setItemName]       = useState('')
   const [quantity,       setQuantity]       = useState('1')
@@ -75,9 +84,11 @@ function GuardMaterialPageInner() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!itemName.trim()) { toast.error('Item name required'); return }
-    if (selectedCat?.requires_photo && !photoUrl) { toast.error('Photo is required for this category'); return }
-    if (selectedCat?.requires_value && !valueInr) { toast.error('Value is required for this category'); return }
+    if (fDesc !== 'hidden' && !itemName.trim()) { toast.error('Item name required'); return }
+    const photoRequired = fPhoto !== 'hidden' && (fPhoto === 'required' || selectedCat?.requires_photo)
+    const valueRequired = fValue !== 'hidden' && (fValue === 'required' || selectedCat?.requires_value)
+    if (photoRequired && !photoUrl) { toast.error('Photo is required'); return }
+    if (valueRequired && !valueInr) { toast.error('Value is required'); return }
 
     setSubmitting(true)
 
@@ -202,8 +213,8 @@ function GuardMaterialPageInner() {
     )
   }
 
-  const photoRequired = !!(selectedCat?.requires_photo)
-  const valueRequired = !!(selectedCat?.requires_value)
+  const photoRequired  = fPhoto !== 'hidden' && !!(fPhoto === 'required' || selectedCat?.requires_photo)
+  const valueRequired  = fValue !== 'hidden' && !!(fValue === 'required' || selectedCat?.requires_value)
   const approvalWarning = needsApproval()
 
   return (
@@ -232,23 +243,29 @@ function GuardMaterialPageInner() {
           </div>
         </div>
 
-        <div>
-          <label className={LABEL}>Item name *</label>
-          <input value={itemName} onChange={e => setItemName(e.target.value)} placeholder="Laptop, ID card, Parcel…" className={INPUT} />
-        </div>
+        {fDesc !== 'hidden' && (
+          <div>
+            <label className={LABEL}>Item name{fDesc === 'required' ? ' *' : ''}</label>
+            <input value={itemName} onChange={e => setItemName(e.target.value)} placeholder="Laptop, ID card, Parcel…" className={INPUT} />
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className={LABEL}>Category</label>
-            <select value={categoryId} onChange={e => handleCategoryChange(e.target.value)} className={INPUT}>
-              <option value="">Select category…</option>
-              {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className={LABEL}>Quantity</label>
-            <input type="number" min="1" value={quantity} onChange={e => setQuantity(e.target.value)} className={INPUT} />
-          </div>
+          {fCategory !== 'hidden' && (
+            <div>
+              <label className={LABEL}>Category</label>
+              <select value={categoryId} onChange={e => handleCategoryChange(e.target.value)} className={INPUT}>
+                <option value="">Select category…</option>
+                {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+              </select>
+            </div>
+          )}
+          {fQty !== 'hidden' && (
+            <div>
+              <label className={LABEL}>Quantity</label>
+              <input type="number" min="1" value={quantity} onChange={e => setQuantity(e.target.value)} className={INPUT} />
+            </div>
+          )}
         </div>
 
         {/* Approval warning banner */}
@@ -264,43 +281,51 @@ function GuardMaterialPageInner() {
           </div>
         )}
 
-        <div>
-          <label className={LABEL}>Vendor / Carrier</label>
-          <VendorAutocomplete value={vendorName} vendorId={vendorId}
-            onChange={(name, vendor) => { setVendorName(name); setVendorId(vendor?.id ?? null) }}
-            placeholder="Search or type vendor name…" />
-        </div>
+        {fVendor !== 'hidden' && (
+          <div>
+            <label className={LABEL}>Vendor / Carrier{fVendor === 'required' ? ' *' : ''}</label>
+            <VendorAutocomplete value={vendorName} vendorId={vendorId}
+              onChange={(name, vendor) => { setVendorName(name); setVendorId(vendor?.id ?? null) }}
+              placeholder="Search or type vendor name…" />
+          </div>
+        )}
 
-        <div>
-          <label className={LABEL}>Estimated Value (₹) {valueRequired && <span className="text-red-500">*</span>}</label>
-          <input type="number" min="0" value={valueInr} onChange={e => setValueInr(e.target.value)} placeholder="0" className={INPUT} />
-        </div>
+        {fValue !== 'hidden' && (
+          <div>
+            <label className={LABEL}>Estimated Value (₹){valueRequired ? ' *' : ''}</label>
+            <input type="number" min="0" value={valueInr} onChange={e => setValueInr(e.target.value)} placeholder="0" className={INPUT} />
+          </div>
+        )}
 
         {/* Returnable toggle */}
-        <div className="space-y-3">
-          <label className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-            <input type="checkbox" checked={isReturnable} onChange={e => setIsReturnable(e.target.checked)} className="accent-brand-500 w-4 h-4" />
-            <div>
-              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Will be returned</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">Enable return tracking for this item</p>
-            </div>
-          </label>
-          {isReturnable && (
-            <div>
-              <label className={LABEL}>Expected Return Date</label>
-              <input type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} className={INPUT} />
-            </div>
-          )}
-        </div>
+        {fReturnable !== 'hidden' && (
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+              <input type="checkbox" checked={isReturnable} onChange={e => setIsReturnable(e.target.checked)} className="accent-brand-500 w-4 h-4" />
+              <div>
+                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">Will be returned</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Enable return tracking for this item</p>
+              </div>
+            </label>
+            {isReturnable && (
+              <div>
+                <label className={LABEL}>Expected Return Date</label>
+                <input type="date" value={returnDate} onChange={e => setReturnDate(e.target.value)} className={INPUT} />
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Photo */}
-        <div>
-          <label className={LABEL}>Photo proof {photoRequired && <span className="text-red-500">*</span>}</label>
-          <PhotoCaptureWidget label="" compact onCapture={url => setPhotoUrl(url)} />
-          {photoRequired && !photoUrl && (
-            <p className="text-xs text-amber-500 mt-1">📸 Photo is required for this category</p>
-          )}
-        </div>
+        {fPhoto !== 'hidden' && (
+          <div>
+            <label className={LABEL}>Photo proof{photoRequired ? ' *' : ''}</label>
+            <PhotoCaptureWidget label="" compact onCapture={url => setPhotoUrl(url)} />
+            {photoRequired && !photoUrl && (
+              <p className="text-xs text-amber-500 mt-1">📸 Photo is required</p>
+            )}
+          </div>
+        )}
 
         <div>
           <label className={LABEL}>Link to visitor (optional)</label>

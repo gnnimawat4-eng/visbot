@@ -4,10 +4,11 @@ import { PhotoCapture }       from '@/components/kiosk/PhotoCapture'
 import { OtpVerify }          from '@/components/kiosk/OtpVerify'
 import { useCheckInFlow }     from '@/hooks/useCheckInFlow'
 import { useCompanyBranding } from '@/hooks/useCompanyBranding'
+import { ConfigProvider }     from '@/components/config/ConfigProvider'
 import { useState } from 'react'
 import { Maximize2 } from 'lucide-react'
 
-export default function KioskPage() {
+function KioskPageInner() {
   const { step, visitorData, setStep, setVisitorData } = useCheckInFlow()
   const [fullscreen, setFullscreen] = useState(false)
   const branding = useCompanyBranding()
@@ -83,12 +84,20 @@ export default function KioskPage() {
         {/* Form content */}
         <div className="px-6 sm:px-8 py-8">
           {step === 'form'  && <CheckInForm  onNext={(d) => { setVisitorData(d); setStep('photo') }} />}
-          {step === 'photo' && <PhotoCapture onNext={() => setStep('otp')} />}
-          {step === 'otp'   && <OtpVerify    visitorData={visitorData} />}
+          {step === 'photo' && <PhotoCapture onNext={(url) => { if (url) setVisitorData(d => ({ ...d, photo_url: url })); setStep('otp') }} />}
+          {step === 'otp'   && <OtpVerify    visitorData={visitorData as Record<string, unknown>} />}
         </div>
       </div>
 
       <p className="mt-6 text-xs text-gray-600">Touch-friendly kiosk mode · VisBot</p>
     </main>
+  )
+}
+
+export default function KioskPage() {
+  return (
+    <ConfigProvider>
+      <KioskPageInner />
+    </ConfigProvider>
   )
 }

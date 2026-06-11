@@ -6,6 +6,7 @@ import { formatDate, formatTime, maskPhone } from '@/lib/utils'
 import { Modal } from '@/components/dashboard/Modal'
 import { ExportPDFModal } from '@/components/dashboard/ExportPDFModal'
 import { PhotoCaptureWidget } from '@/components/ui/PhotoCaptureWidget'
+import { useConfig } from '@/lib/config'
 import toast from 'react-hot-toast'
 
 interface Visitor { name: string; phone: string; email: string | null }
@@ -20,8 +21,6 @@ interface CheckIn {
   created_at: string
 }
 
-const PURPOSES = ['meeting', 'delivery', 'interview', 'official', 'other'] as const
-
 const DATE_OPTS = [
   { label: 'Today',       value: new Date().toISOString().split('T')[0] },
   { label: 'Yesterday',   value: (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().split('T')[0] })() },
@@ -29,7 +28,7 @@ const DATE_OPTS = [
   { label: 'All time',    value: '__all__' },
 ]
 
-const EMPTY_FORM = { name: '', phone: '', purpose: 'meeting' as typeof PURPOSES[number], host_name: '', photo_url: '' }
+const EMPTY_FORM = { name: '', phone: '', purpose: '', host_name: '', photo_url: '' }
 const INPUT = 'w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500'
 
 function initials(name: string) {
@@ -99,6 +98,9 @@ function VisitorCard({ row, onCheckout, checking }: {
 }
 
 export default function VisitorsPage() {
+  const config   = useConfig()
+  const purposes = config.purposes.length ? config.purposes : ['Meeting', 'Delivery', 'Interview', 'Official', 'Other']
+
   const [rows, setRows]           = useState<CheckIn[]>([])
   const [loading, setLoading]     = useState(true)
   const [search, setSearch]       = useState('')
@@ -109,7 +111,7 @@ export default function VisitorsPage() {
   const [company, setCompany]     = useState('VisBot Admin')
   const [modalOpen, setModalOpen] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
-  const [form, setForm]           = useState(EMPTY_FORM)
+  const [form, setForm]           = useState({ ...EMPTY_FORM, purpose: purposes[0] ?? '' })
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -144,7 +146,7 @@ export default function VisitorsPage() {
   const set = (field: keyof typeof EMPTY_FORM) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm(f => ({ ...f, [field]: e.target.value }))
 
-  const closeModal = () => { setModalOpen(false); setForm(EMPTY_FORM) }
+  const closeModal = () => { setModalOpen(false); setForm({ ...EMPTY_FORM, purpose: purposes[0] ?? '' }) }
 
   const submitCheckin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -197,7 +199,7 @@ export default function VisitorsPage() {
         </select>
         <select value={purpose} onChange={e => setPurpose(e.target.value)} className="px-2 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
           <option value="">All purposes</option>
-          {PURPOSES.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+          {purposes.map(p => <option key={p} value={p}>{p}</option>)}
         </select>
         <select value={status} onChange={e => setStatus(e.target.value)} className="col-span-2 sm:col-span-1 px-2 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
           <option value="">All statuses</option>
@@ -312,7 +314,7 @@ export default function VisitorsPage() {
           </Field>
           <Field label="Purpose" required>
             <select value={form.purpose} onChange={set('purpose')} className={INPUT + ' bg-white'}>
-              {PURPOSES.map(p => <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>)}
+              {purposes.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </Field>
           <Field label="Host / meeting with" required>

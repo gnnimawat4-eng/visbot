@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/server'
+import { createAdminClient, createAdminClientRaw } from '@/lib/supabase/server'
 import { verifyOtp } from '@/lib/otp'
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const { otp } = await req.json().catch(() => ({})) as { otp?: string }
 
-  const sb = createAdminClient()
+  const sb    = createAdminClient()
+  const sbRaw = createAdminClientRaw()
 
-  // Fetch checkin to get visitor phone for OTP verification
+  // Fetch checkin to get visitor phone and company for OTP check
   const { data: existing, error: fe } = await sb
     .from('checkins')
     .select('*, visitor:visitors(name,phone), company:companies(name)')
@@ -16,13 +17,26 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   if (fe || !existing) return NextResponse.json({ error: 'Checkin not found' }, { status: 404 })
 
+  const companyId    = (existing as Record<string, unknown>).company_id as string | null
   const visitorPhone = (existing.visitor as { phone: string } | null)?.phone
 
-  if (!otp) return NextResponse.json({ error: 'OTP required' }, { status: 400 })
-  if (!visitorPhone) return NextResponse.json({ error: 'Visitor phone not on record' }, { status: 400 })
+  // Check if this company requires OTP on exit
+  let otpRequiredOnExit = true
+  if (companyId) {
+    const { data: cfg } = await sbRaw
+      .from('company_config')
+      .select('otp_required_on_exit')
+      .eq('company_id', companyId)
+      .maybeSingle()
+    if (cfg) otpRequiredOnExit = (cfg as Record<string, unknown>).otp_required_on_exit !== false
+  }
 
-  const valid = await verifyOtp(visitorPhone, otp)
-  if (!valid) return NextResponse.json({ error: 'Invalid or expired OTP' }, { status: 400 })
+  if (otpRequiredOnExit) {
+    if (!otp) return NextResponse.json({ error: 'OTP required' }, { status: 400 })
+    if (!visitorPhone) return NextResponse.json({ error: 'Visitor phone not on record' }, { status: 400 })
+    const valid = await verifyOtp(visitorPhone, otp)
+    if (!valid) return NextResponse.json({ error: 'Invalid or expired OTP' }, { status: 400 })
+  }
 
   const { data: checkin, error } = await sb
     .from('checkins')

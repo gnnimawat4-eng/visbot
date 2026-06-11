@@ -5,7 +5,7 @@ import { z } from 'zod'
 const schema = z.object({
   name:       z.string().min(2),
   phone:      z.string().min(10),
-  purpose:    z.enum(['meeting', 'delivery', 'interview', 'other']),
+  purpose:    z.string().min(1),
   host:       z.string().min(2),
   company_id: z.string().uuid(),
   photo_url:  z.string().url().optional(),

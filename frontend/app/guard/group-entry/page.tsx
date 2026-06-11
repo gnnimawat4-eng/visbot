@@ -3,10 +3,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Users, ChevronRight, ChevronLeft, Plus, Trash2, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useConfig } from '@/lib/config'
 
 interface Member { name: string; phone: string; id_proof_type: string; id_proof_number: string }
-
-const PURPOSES = ['Interview Panel','Audit','Delivery','Inspection','Meeting','Training','Family Visit','Other']
 const INPUT = 'w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400'
 const LABEL = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5'
 
@@ -29,7 +28,10 @@ function StepDot({ step, current, label }: { step: number; current: number; labe
 }
 
 export default function GroupEntryPage() {
-  const router = useRouter()
+  const router   = useRouter()
+  const config   = useConfig()
+  const purposes = config.purposes.length ? config.purposes : ['Interview Panel','Audit','Delivery','Inspection','Meeting','Training','Family Visit','Other']
+
   const [step, setStep]     = useState(1)
   const [hosts, setHosts]   = useState<{ id: string; full_name: string; phone: string | null }[]>([])
   const [submitting, setSubmitting] = useState(false)
@@ -41,7 +43,7 @@ export default function GroupEntryPage() {
 
   // Step 2: Group details
   const [groupSize, setGroupSize] = useState(2)
-  const [purpose, setPurpose]     = useState(PURPOSES[0])
+  const [purpose, setPurpose]     = useState(purposes[0] ?? 'Meeting')
   const [hostId, setHostId]       = useState('')
   const [hostName, setHostName]   = useState('')
   const [hostPhone, setHostPhone] = useState('')
@@ -184,7 +186,7 @@ export default function GroupEntryPage() {
             </Field>
             <Field label="Purpose" required>
               <select value={purpose} onChange={e => setPurpose(e.target.value)} className={INPUT}>
-                {PURPOSES.map(p => <option key={p} value={p}>{p}</option>)}
+                {purposes.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
             </Field>
             <Field label="Host">

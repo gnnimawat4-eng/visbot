@@ -2,17 +2,19 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useConfig } from '@/lib/config'
 
 const INPUT = 'w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500'
 const LABEL = 'block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5'
 
-const PURPOSES = ['Meeting', 'Delivery', 'Interview', 'Official', 'Other']
-
 export default function NewInvitationPage() {
-  const router = useRouter()
+  const router   = useRouter()
+  const config   = useConfig()
+  const purposes = config.purposes.length ? config.purposes : ['Meeting', 'Delivery', 'Interview', 'Official', 'Other']
+
   const [form, setForm] = useState({
     visitor_name: '', visitor_phone: '', visitor_email: '',
-    host_name: '', purpose: 'Meeting', scheduled_date: '', scheduled_time: '',
+    host_name: '', purpose: purposes[0] ?? 'Meeting', scheduled_date: '', scheduled_time: '',
     notes: '', valid_hours: '24',
   })
   const [saving, setSaving] = useState(false)
@@ -81,7 +83,7 @@ export default function NewInvitationPage() {
             <div>
               <label className={LABEL}>Purpose</label>
               <select className={INPUT} value={form.purpose} onChange={set('purpose')}>
-                {PURPOSES.map(p => <option key={p}>{p}</option>)}
+                {purposes.map(p => <option key={p}>{p}</option>)}
               </select>
             </div>
             <div>
