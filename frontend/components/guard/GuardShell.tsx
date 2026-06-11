@@ -14,21 +14,20 @@ import { ConfigProvider } from '@/components/config/ConfigProvider'
 import { useConfig } from '@/lib/config'
 import { BottomNav } from '@/components/ui/BottomNav'
 
-// ── Light sidebar constants (matches admin Sidebar.tsx) ──────────────────────
 const S = {
-  bg:           '#FFFFFF',
-  border:       '#EAEAEA',
-  text:         '#52525B',
-  textActive:   '#0A0A0A',
-  activeBg:     '#F4F4F5',
-  hoverBg:      '#F4F4F5',
-  logo:         '#0A0A0A',
+  bg:           'var(--vb-bg-sidebar)',
+  border:       'var(--vb-border)',
+  text:         'var(--vb-text-2)',
+  textActive:   'var(--vb-text)',
+  activeBg:     'var(--vb-bg-active)',
+  hoverBg:      'var(--vb-bg-hover)',
+  logo:         'var(--vb-text)',
   logoGreen:    '#10B981',
-  label:        '#71717A',
-  badgeBg:      '#F4F4F5',
-  badgeText:    '#0A0A0A',
-  iconMuted:    '#9CA3AF',
-} as const
+  label:        'var(--vb-text-3)',
+  badgeBg:      'var(--vb-bg-hover)',
+  badgeText:    'var(--vb-text)',
+  iconMuted:    'var(--vb-text-3)',
+}
 
 // ── Nav definitions (with optional module key) ───────────────────────────────
 
@@ -234,7 +233,7 @@ export default function GuardShell({ children }: { children: React.ReactNode }) 
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logoUrl} alt={companyName}
-                className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-200" />
+                className="w-10 h-10 rounded-lg object-cover flex-shrink-0" style={{ border: '1px solid var(--vb-border)' }} />
             ) : (
               <div className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold flex-shrink-0"
                 style={{ background: S.logoGreen, color: '#fff' }}>
@@ -245,7 +244,7 @@ export default function GuardShell({ children }: { children: React.ReactNode }) 
               <p className="text-sm font-medium leading-tight truncate" style={{ color: S.logo }}>
                 {companyName || '…'}
               </p>
-              <p className="text-xs leading-tight mt-0.5 text-gray-500">Workspace</p>
+              <p className="text-xs leading-tight mt-0.5" style={{ color: 'var(--vb-text-3)' }}>Workspace</p>
             </div>
           </div>
         )}

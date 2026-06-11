@@ -28,9 +28,9 @@ const TEMPLATE_COLORS: Record<string, string> = {
 }
 
 const PLAN_COLOR: Record<string, string> = {
-  starter:    'bg-gray-100 text-gray-600',
-  pro:        'bg-brand-50 text-brand-600',
-  enterprise: 'bg-purple-50 text-purple-600',
+  starter:    'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
+  pro:        'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400',
+  enterprise: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
 }
 
 const INPUT = 'w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100'

@@ -91,8 +91,8 @@ export default function SettingsPage() {
     return (
       <div className="animate-pulse space-y-6 max-w-2xl">
         <div className="h-6 w-32 bg-gray-100 rounded" />
-        <div className="bg-white border border-gray-100 rounded-lg p-6 space-y-4">
-          {[1, 2, 3].map(i => <div key={i} className="h-10 bg-gray-100 rounded" />)}
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg p-6 space-y-4">
+          {[1, 2, 3].map(i => <div key={i} className="h-10 bg-gray-100 dark:bg-gray-800 rounded" />)}
         </div>
       </div>
     )

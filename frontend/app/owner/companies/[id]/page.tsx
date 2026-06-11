@@ -26,7 +26,9 @@ interface PageData {
 }
 
 const PLAN_COLOR: Record<string, string> = {
-  starter: 'bg-gray-100 text-gray-600', pro: 'bg-brand-50 text-brand-600', enterprise: 'bg-purple-50 text-purple-600',
+  starter:    'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
+  pro:        'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400',
+  enterprise: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
 }
 const PLANS = ['starter', 'pro', 'enterprise']
 const INPUT = 'w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100'
@@ -260,7 +262,7 @@ export default function CompanyDetailPage() {
                       <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{g.full_name}</p>
                       <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{g.email ?? g.phone ?? '—'}</p>
                     </div>
-                    <span className={`text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0 ${g.active ? 'text-green-600 bg-green-50' : 'text-gray-400 bg-gray-100'}`}>
+                    <span className={`text-xs px-1.5 py-0.5 rounded font-medium flex-shrink-0 ${g.active ? 'text-green-600 bg-green-50 dark:bg-green-900/20' : 'text-gray-400 bg-gray-100 dark:bg-gray-800'}`}>
                       {g.active ? 'On' : 'Off'}
                     </span>
                   </li>
@@ -286,7 +288,7 @@ export default function CompanyDetailPage() {
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{c.visitor?.name ?? '—'}</p>
                       <p className="text-xs text-gray-400 dark:text-gray-500">{c.purpose} · {c.host_name} · {formatTime(c.created_at)}</p>
                     </div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${c.status === 'checked_in' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${c.status === 'checked_in' ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
                       {c.status === 'checked_in' ? 'In' : 'Out'}
                     </span>
                   </li>
@@ -295,17 +297,17 @@ export default function CompanyDetailPage() {
           }
         </div>
 
-        <div className="bg-white border border-gray-100 rounded-lg overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+        <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
             <Truck size={15} className="text-gray-400" />
-            <h2 className="text-sm font-semibold text-gray-900">Recent gate passes</h2>
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Recent gate passes</h2>
           </div>
           {recentPasses.length === 0
-            ? <p className="px-5 py-8 text-sm text-gray-400 text-center">No gate passes yet</p>
-            : <ul className="divide-y divide-gray-50">
+            ? <p className="px-5 py-8 text-sm text-gray-400 dark:text-gray-500 text-center">No gate passes yet</p>
+            : <ul className="divide-y divide-gray-50 dark:divide-gray-800">
                 {recentPasses.map(p => (
                   <li key={p.id} className="px-5 py-3 flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${p.pass_type === 'inward' ? 'bg-emerald-50' : 'bg-amber-50'}`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${p.pass_type === 'inward' ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-amber-50 dark:bg-amber-900/20'}`}>
                       {p.pass_type === 'inward'
                         ? <ArrowDownCircle size={12} className="text-emerald-500" />
                         : <ArrowUpCircle   size={12} className="text-amber-500"   />}
@@ -314,7 +316,7 @@ export default function CompanyDetailPage() {
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100 font-mono">{p.vehicle_number}</p>
                       <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{p.party_name} · {formatTime(p.checked_in_at)}</p>
                     </div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${p.status === 'inside' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${p.status === 'inside' ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
                       {p.status}
                     </span>
                   </li>

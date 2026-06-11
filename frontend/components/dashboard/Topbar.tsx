@@ -36,16 +36,16 @@ export function Topbar({ onMenuClick }: Props) {
   return (
     <header
       className="no-print h-14 flex items-center justify-between px-4 sm:px-6 flex-shrink-0"
-      style={{ background: '#FFFFFF', borderBottom: '1px solid #EAEAEA' }}
+      style={{ background: 'var(--vb-bg-sidebar)', borderBottom: '1px solid var(--vb-border)' }}
     >
       <div className="flex items-center gap-3">
         {/* Hamburger: tablet only (md → lg) */}
         <button
           onClick={onMenuClick}
           className="hidden md:flex lg:hidden items-center justify-center w-8 h-8 rounded-lg transition-colors -ml-1"
-          style={{ color: '#9CA3AF' }}
-          onMouseEnter={e => { e.currentTarget.style.background = '#F5F5F5'; e.currentTarget.style.color = '#6B7280' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9CA3AF' }}
+          style={{ color: 'var(--vb-text-3)' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--vb-bg-hover)'; e.currentTarget.style.color = 'var(--vb-text-2)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--vb-text-3)' }}
           aria-label="Open menu"
         >
           <Menu size={16} />
@@ -56,7 +56,7 @@ export function Topbar({ onMenuClick }: Props) {
             <img src={logoUrl} alt={companyName} className="rounded-md object-cover flex-shrink-0"
               style={{ width: 22, height: 22 }} />
           )}
-          <span className="text-sm font-medium" style={{ color: '#0A0A0A' }}>
+          <span className="text-sm font-medium" style={{ color: 'var(--vb-text)' }}>
             {companyName || 'Dashboard'}
           </span>
         </div>
@@ -66,9 +66,9 @@ export function Topbar({ onMenuClick }: Props) {
         {/* Bell */}
         <button
           className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
-          style={{ color: '#9CA3AF' }}
-          onMouseEnter={e => { e.currentTarget.style.background = '#F5F5F5'; e.currentTarget.style.color = '#6B7280' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9CA3AF' }}
+          style={{ color: 'var(--vb-text-3)' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--vb-bg-hover)'; e.currentTarget.style.color = 'var(--vb-text-2)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--vb-text-3)' }}
           aria-label="Notifications"
         >
           <Bell size={15} />
@@ -78,9 +78,9 @@ export function Topbar({ onMenuClick }: Props) {
         <button
           onClick={logout}
           className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
-          style={{ color: '#9CA3AF' }}
-          onMouseEnter={e => { e.currentTarget.style.background = '#F5F5F5'; e.currentTarget.style.color = '#6B7280' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#9CA3AF' }}
+          style={{ color: 'var(--vb-text-3)' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--vb-bg-hover)'; e.currentTarget.style.color = 'var(--vb-text-2)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--vb-text-3)' }}
           title="Sign out"
         >
           <LogOut size={15} />
@@ -89,7 +89,7 @@ export function Topbar({ onMenuClick }: Props) {
         {/* User avatar */}
         <div
           className="ml-1 w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold select-none"
-          style={{ background: '#18181B', color: '#FFFFFF' }}
+          style={{ background: 'var(--vb-bg-active)', color: 'var(--vb-text)' }}
         >
           {userInitial}
         </div>

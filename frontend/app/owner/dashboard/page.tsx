@@ -13,9 +13,9 @@ interface Stats {
 }
 
 const PLAN_COLOR: Record<string, string> = {
-  starter:    'bg-gray-100 text-gray-600',
-  pro:        'bg-brand-50 text-brand-600',
-  enterprise: 'bg-purple-50 text-purple-600',
+  starter:    'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400',
+  pro:        'bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400',
+  enterprise: 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400',
 }
 
 function StatCard({ label, value, icon: Icon, accent }: {
@@ -43,9 +43,9 @@ export default function OwnerDashboard() {
     return (
       <div className="animate-pulse space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1,2,3,4].map(i => <div key={i} className="h-28 bg-gray-100 rounded-xl" />)}
+          {[1,2,3,4].map(i => <div key={i} className="h-28 bg-gray-100 dark:bg-gray-800 rounded-xl" />)}
         </div>
-        <div className="h-64 bg-gray-100 rounded-xl" />
+        <div className="h-64 bg-gray-100 dark:bg-gray-800 rounded-xl" />
       </div>
     )
   }

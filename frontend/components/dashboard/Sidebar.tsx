@@ -10,20 +10,19 @@ import {
 import { useConfig } from '@/lib/config'
 import { useCompanyBranding } from '@/hooks/useCompanyBranding'
 
-// Light sidebar constants
 const S = {
-  bg:         '#FFFFFF',
-  border:     '#EAEAEA',
-  text:       '#52525B',
-  textActive: '#0A0A0A',
-  activeBg:   '#F4F4F5',
-  hoverBg:    '#F4F4F5',
-  logo:       '#0A0A0A',
-  logoGreen:  '#10B981',
-  label:      '#71717A',
-  badgeBg:    '#FFFFFF',
-  collapseText: '#A1A1AA',
-} as const
+  bg:           'var(--vb-bg-sidebar)',
+  border:       'var(--vb-border)',
+  text:         'var(--vb-text-2)',
+  textActive:   'var(--vb-text)',
+  activeBg:     'var(--vb-bg-active)',
+  hoverBg:      'var(--vb-bg-hover)',
+  logo:         'var(--vb-text)',
+  logoGreen:    '#10B981',
+  label:        'var(--vb-text-3)',
+  badgeBg:      'var(--vb-bg-card)',
+  collapseText: 'var(--vb-text-3)',
+}
 
 interface NavItem {
   href: string
@@ -207,7 +206,7 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
           {branding?.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={branding.logo_url} alt={displayName}
-              className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-200" />
+              className="w-10 h-10 rounded-lg object-cover flex-shrink-0" style={{ border: '1px solid var(--vb-border)' }} />
           ) : (
             <div
               className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-semibold flex-shrink-0"
@@ -220,7 +219,7 @@ export function Sidebar({ collapsed, onToggle, onMobileClose }: Props) {
             <p className="text-sm font-medium leading-tight truncate" style={{ color: S.logo }}>
               {displayName || '…'}
             </p>
-            <p className="text-xs leading-tight mt-0.5 text-gray-500">Workspace</p>
+            <p className="text-xs leading-tight mt-0.5" style={{ color: 'var(--vb-text-3)' }}>Workspace</p>
           </div>
         </div>
       )}
